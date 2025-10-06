@@ -5,6 +5,8 @@ import * as AdminService from "../services/admin.service";
 import * as AppService from "../services/application.service";
 import { UserStatus } from "../types/types";
 
+console.log("all bugs fixed");
+
 export async function listApplications(req: Request, res: Response) {
   const filter: any = {};
   if (req.query.type) filter.type = req.query.type;
