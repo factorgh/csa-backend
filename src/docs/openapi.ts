@@ -16,7 +16,7 @@ export const swaggerSpec = swaggerJSDoc({
     servers: [
       { url: `http://localhost:${config.port}${base}`, description: "Local" },
       {
-        url: `https://csa-backend-aw3ly80hi-factorghs-projects.vercel.app${base}`,
+        url: `https://csa-backend-brown.vercel.app${base}`,
         description: "Production",
       },
     ],
