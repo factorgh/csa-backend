@@ -1,0 +1,297 @@
+import Application, { IApplication } from "../models/application.model";
+import License from "../models/license.model";
+import { ApplicationStatus, ApplicationType } from "../types/types";
+import {
+  generateLicenseNumber,
+  generateVerificationHash,
+} from "../utils/license.util";
+import { logAudit } from "./audit.service";
+import { AuditAction } from "../types/types";
+
+export async function createDraft(params: {
+  applicantUserId: string;
+  type: ApplicationType;
+  data: any;
+}): Promise<IApplication> {
+  const app = await Application.create({
+    applicantUserId: params.applicantUserId,
+    type: params.type,
+    status: ApplicationStatus.DRAFT,
+    data: params.data,
+  } as any);
+  await logAudit({
+    action: AuditAction.APPLICATION_CREATED,
+    actorUserId: params.applicantUserId,
+    entityType: "Application",
+    entityId: String(app._id),
+    after: app,
+  });
+  return app;
+}
+
+export async function updateDraft(
+  appId: string,
+  userId: string,
+  updates: any
+): Promise<IApplication> {
+  const app = await Application.findOne({
+    _id: appId,
+    applicantUserId: userId,
+  });
+  if (!app)
+    throw Object.assign(new Error("Application not found"), { status: 404 });
+  if (
+    ![ApplicationStatus.DRAFT, ApplicationStatus.PENDING_DOCUMENTS].includes(
+      app.status
+    )
+  ) {
+    throw Object.assign(
+      new Error("Cannot modify application in current status"),
+      { status: 400 }
+    );
+  }
+  const before = app.toObject();
+  Object.assign(app.data as any, updates);
+  await app.save();
+  await logAudit({
+    action: AuditAction.APPLICATION_UPDATED,
+    actorUserId: userId,
+    entityType: "Application",
+    entityId: String(app._id),
+    before,
+    after: app,
+  });
+  return app;
+}
+
+export async function submit(
+  appId: string,
+  userId: string
+): Promise<IApplication> {
+  const app = await Application.findOne({
+    _id: appId,
+    applicantUserId: userId,
+  });
+  if (!app)
+    throw Object.assign(new Error("Application not found"), { status: 404 });
+  if (
+    ![ApplicationStatus.DRAFT, ApplicationStatus.PENDING_DOCUMENTS].includes(
+      app.status
+    )
+  ) {
+    throw Object.assign(
+      new Error("Cannot submit application in current status"),
+      { status: 400 }
+    );
+  }
+  app.status = ApplicationStatus.PENDING;
+  app.submittedAt = new Date();
+  await app.save();
+  await logAudit({
+    action: AuditAction.APPLICATION_SUBMITTED,
+    actorUserId: userId,
+    entityType: "Application",
+    entityId: String(app._id),
+    after: app,
+  });
+  return app;
+}
+
+export async function listOwn(
+  userId: string,
+  query: { status?: string; type?: string; page?: number; limit?: number }
+) {
+  const filter: any = { applicantUserId: userId };
+  if (query.status) filter.status = query.status;
+  if (query.type) filter.type = query.type;
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
+  const skip = (page - 1) * limit;
+
+  const [data, total] = await Promise.all([
+    Application.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Application.countDocuments(filter),
+  ]);
+
+  return {
+    data,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  };
+}
+
+export async function getById(
+  appId: string,
+  userId: string
+): Promise<IApplication> {
+  const app = await Application.findOne({
+    _id: appId,
+    applicantUserId: userId,
+  });
+  if (!app)
+    throw Object.assign(new Error("Application not found"), { status: 404 });
+  return app;
+}
+
+export async function approve(
+  appId: string,
+  reviewerId: string,
+  options?: { expiresAt?: Date }
+) {
+  const app = await Application.findById(appId);
+  if (!app)
+    throw Object.assign(new Error("Application not found"), { status: 404 });
+  if (app.status !== ApplicationStatus.UNDER_REVIEW)
+    throw Object.assign(new Error("Application must be under review"), {
+      status: 400,
+    });
+
+  const licenseNumber = generateLicenseNumber(app.type);
+  const verificationHash = generateVerificationHash(licenseNumber);
+
+  // Derive names/emails based on new Zod structures
+  let holderName = "Holder";
+  let holderEmail = "";
+  let organizationName: string | undefined = undefined;
+
+  if (app.type === ApplicationType.PROVIDER) {
+    const d: any = app.data;
+    const acc = d.account || {};
+    const reg = d.registration || {};
+    holderName =
+      [acc.firstname, acc.middleName, acc.lastname].filter(Boolean).join(" ") ||
+      "Holder";
+    holderEmail = acc.email || reg.emailAddress || "";
+    organizationName = reg.nameOfInstitution;
+  } else if (app.type === ApplicationType.PROFESSIONAL) {
+    const d: any = app.data;
+    const acc = d.account || {};
+    holderName =
+      [acc.firstname, acc.middleName, acc.lastname].filter(Boolean).join(" ") ||
+      "Holder";
+    holderEmail = acc.email || "";
+    organizationName = undefined;
+  } else if (app.type === ApplicationType.ESTABLISHMENT) {
+    const d: any = app.data;
+    const acc = d.account || {};
+    const est = d.establishment || {};
+    holderName =
+      [acc.firstname, acc.middleName, acc.lastname].filter(Boolean).join(" ") ||
+      "Holder";
+    holderEmail = acc.email || est.emailAddress || "";
+    organizationName = est.name;
+  }
+
+  const license = await License.create({
+    applicationId: app._id,
+    licenseNumber,
+    type: app.type,
+    issuedAt: new Date(),
+    expiresAt: options?.expiresAt,
+    status: "ACTIVE",
+    verificationHash,
+    holderName,
+    holderEmail,
+    organizationName,
+  } as any);
+
+  app.status = ApplicationStatus.APPROVED;
+  app.decidedAt = new Date();
+  (app as any).decisionBy = reviewerId as any;
+  (app as any).licenseId = license._id as any;
+  await app.save();
+
+  await logAudit({
+    action: AuditAction.APPLICATION_APPROVED,
+    actorUserId: reviewerId,
+    entityType: "Application",
+    entityId: String(app._id),
+    after: app,
+  });
+  await logAudit({
+    action: AuditAction.LICENSE_GENERATED,
+    actorUserId: reviewerId,
+    entityType: "License",
+    entityId: String(license._id),
+    after: license,
+  });
+
+  return { app, license };
+}
+
+export async function setUnderReview(
+  appId: string,
+  reviewerId: string,
+  notes?: string
+) {
+  const app = await Application.findById(appId);
+  if (!app)
+    throw Object.assign(new Error("Application not found"), { status: 404 });
+  if (
+    ![ApplicationStatus.PENDING, ApplicationStatus.PENDING_DOCUMENTS].includes(
+      app.status
+    )
+  ) {
+    throw Object.assign(new Error("Application not in a reviewable state"), {
+      status: 400,
+    });
+  }
+  (app as any).reviewerNotes = notes;
+  app.status = ApplicationStatus.UNDER_REVIEW;
+  await app.save();
+  await logAudit({
+    action: AuditAction.APPLICATION_REVIEWED,
+    actorUserId: reviewerId,
+    entityType: "Application",
+    entityId: String(app._id),
+    after: app,
+  });
+  return app;
+}
+
+export async function reject(
+  appId: string,
+  reviewerId: string,
+  comment: string
+) {
+  const app = await Application.findById(appId);
+  if (!app)
+    throw Object.assign(new Error("Application not found"), { status: 404 });
+  if (app.status !== ApplicationStatus.UNDER_REVIEW)
+    throw Object.assign(new Error("Application must be under review"), {
+      status: 400,
+    });
+  app.status = ApplicationStatus.REJECTED;
+  app.decidedAt = new Date();
+  (app as any).decisionBy = reviewerId as any;
+  (app as any).decisionComment = comment;
+  await app.save();
+  await logAudit({
+    action: AuditAction.APPLICATION_REJECTED,
+    actorUserId: reviewerId,
+    entityType: "Application",
+    entityId: String(app._id),
+    after: app,
+  });
+  return app;
+}
+
+export async function requestDocuments(
+  appId: string,
+  reviewerId: string,
+  docs: string[]
+) {
+  const app = await Application.findById(appId);
+  if (!app)
+    throw Object.assign(new Error("Application not found"), { status: 404 });
+  app.status = ApplicationStatus.PENDING_DOCUMENTS;
+  (app as any).documentsRequired = docs;
+  await app.save();
+  await logAudit({
+    action: AuditAction.DOCUMENTS_REQUESTED,
+    actorUserId: reviewerId,
+    entityType: "Application",
+    entityId: String(app._id),
+    after: app,
+  });
+  return app;
+}
