@@ -32,8 +32,51 @@ export const swaggerSpec = swaggerJSDoc({
           scheme: "bearer",
           bearerFormat: "JWT",
         },
+        License: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            applicationId: { type: "string" },
+            licenseNumber: { type: "string" },
+            type: { $ref: "#/components/schemas/ApplicationType" },
+            issuedAt: { type: "string", format: "date-time" },
+            expiresAt: { type: "string", format: "date-time" },
+            status: {
+              type: "string",
+              enum: ["ACTIVE", "EXPIRED", "REVOKED", "SUSPENDED"],
+            },
+            verificationHash: { type: "string" },
+            holderName: { type: "string" },
+            holderEmail: { type: "string", format: "email" },
+            organizationName: { type: "string" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
       },
       schemas: {
+        User: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            email: { type: "string", format: "email" },
+            firstName: { type: "string" },
+            lastName: { type: "string" },
+            middleName: { type: "string" },
+            phoneNumber: { type: "string" },
+            telephoneNumber: { type: "string" },
+            role: {
+              type: "string",
+              enum: ["APPLICANT", "ADMIN", "REVIEWER", "SUPERADMIN"],
+            },
+            designation: { type: "string" },
+            gender: { type: "string", enum: ["Male", "Female", "Other"] },
+            status: { type: "string", enum: ["ACTIVE", "SUSPENDED", "DELETED"] },
+            lastLoginAt: { type: "string", format: "date-time" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
         ApplicationType: {
           type: "string",
           description: "Available application types",
@@ -152,7 +195,7 @@ export const swaggerSpec = swaggerJSDoc({
             "companyPhone",
             "companyEmail",
             "physicalAddress",
-            "businessDescription",
+            "companyDescription",
             "coreBusinessService",
           ],
           properties: {
@@ -167,8 +210,9 @@ export const swaggerSpec = swaggerJSDoc({
             physicalAddress: { type: "string" },
             postalAddress: { type: "string" },
             website: { type: "string" },
-            businessDescription: { type: "string" },
+            companyDescription: { type: "string" },
             coreBusinessService: { type: "string" },
+            ghanaDigitalPostAddress: { type: "string" },
           },
         },
         ProfessionalApplication: {
@@ -287,6 +331,50 @@ export const swaggerSpec = swaggerJSDoc({
     },
     security: [{ bearerAuth: [] }],
     paths: {
+      // Admin Users
+      [`${base}/admin/users`]: {
+        get: {
+          tags: ["Admin"],
+          summary: "List users",
+          parameters: [
+            { in: "query", name: "role", schema: { type: "string" } },
+            { in: "query", name: "status", schema: { type: "string" } },
+            { in: "query", name: "email", schema: { type: "string" } },
+            { in: "query", name: "name", schema: { type: "string" } },
+            { in: "query", name: "page", schema: { type: "integer" } },
+            { in: "query", name: "limit", schema: { type: "integer" } },
+          ],
+          responses: {
+            "200": {
+              description: "OK",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean" },
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/User" },
+                      },
+                      pagination: {
+                        type: "object",
+                        properties: {
+                          page: { type: "integer" },
+                          limit: { type: "integer" },
+                          total: { type: "integer" },
+                          pages: { type: "integer" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      
       // Auth
       [`${base}/auth/register`]: {
         post: {
@@ -696,7 +784,51 @@ export const swaggerSpec = swaggerJSDoc({
               },
             },
           },
-          responses: { "200": { description: "OK" } },
+          responses: {
+            "200": {
+              description: "Approved. Returns application and license metadata",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean" },
+                      data: {
+                        type: "object",
+                        properties: {
+                          app: { type: "object" },
+                          license: { $ref: "#/components/schemas/License" },
+                        },
+                      },
+                    },
+                  },
+                  examples: {
+                    Approved: {
+                      value: {
+                        success: true,
+                        data: {
+                          app: { _id: "64f...", status: "APPROVED" },
+                          license: {
+                            _id: "65a...",
+                            applicationId: "64f...",
+                            licenseNumber: "PRV-2025-000123",
+                            type: "PROVIDER",
+                            issuedAt: "2025-10-07T12:00:00.000Z",
+                            expiresAt: "2026-10-07T12:00:00.000Z",
+                            status: "ACTIVE",
+                            verificationHash: "abc123hash",
+                            holderName: "Holder",
+                            holderEmail: "holder@example.com",
+                            organizationName: "Acme Cyber",
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       [`${base}/admin/applications/{id}/reject`]: {

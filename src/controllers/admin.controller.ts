@@ -99,3 +99,20 @@ export async function audit(_req: Request, res: Response) {
   const list = await Audit.find({}).sort({ createdAt: -1 }).limit(500);
   return res.json({ success: true, data: list });
 }
+
+// Users
+export async function listUsers(req: Request, res: Response) {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+  const { role, status, email, name } = req.query as any;
+  const result = await AdminService.listUsers(
+    { role, status, email, name },
+    { page, limit }
+  );
+  res.json({ success: true, data: result.data, pagination: result.pagination });
+}
+
+export async function getUser(req: Request, res: Response) {
+  const user = await AdminService.getUserById(req.params.id);
+  res.json({ success: true, data: user });
+}

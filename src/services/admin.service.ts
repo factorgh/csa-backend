@@ -44,3 +44,25 @@ export async function statsOverview() {
   ]);
   return { total, pending, approved, rejected };
 }
+
+// Users
+export async function listUsers(filter: any, pagination: any) {
+  const q: any = {};
+  if (filter.role) q.role = filter.role;
+  if (filter.status) q.status = filter.status;
+  if (filter.email) q.email = new RegExp(filter.email, "i");
+  if (filter.name) {
+    q.$or = [
+      { firstName: new RegExp(filter.name, "i") },
+      { lastName: new RegExp(filter.name, "i") },
+      { middleName: new RegExp(filter.name, "i") },
+    ];
+  }
+  return paginate(User as any, q, pagination);
+}
+
+export async function getUserById(id: string) {
+  const user = await User.findById(id);
+  if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+  return user;
+}
