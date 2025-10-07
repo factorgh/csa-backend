@@ -2,7 +2,7 @@ import swaggerJSDoc from "swagger-jsdoc";
 import config from "../config";
 
 const version = "1.0.0";
-const base = `/api/${config.apiVersion}`;
+const base = ``;
 
 export const swaggerSpec = swaggerJSDoc({
   definition: {
@@ -14,12 +14,16 @@ export const swaggerSpec = swaggerJSDoc({
       contact: { name: "CSA", email: "support@csa.gov" },
     },
     servers: [
-      { url: `http://localhost:${config.port}${base}`, description: "Local" },
       {
-        url: `https://csa-backend-pi.vercel.app/api/${config.apiVersion}`,
+        url: `http://localhost:${config.port}/api/${config.apiVersion}`,
+        description: "Local",
+      },
+      {
+        url: `https://csa-backend-lt2bkp3f3-factorghs-projects.vercel.app/api/${config.apiVersion}`,
         description: "Production",
       },
     ],
+
     components: {
       securitySchemes: {
         bearerAuth: {
