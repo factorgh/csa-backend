@@ -62,130 +62,95 @@ export const swaggerSpec = swaggerJSDoc({
             password: { type: "string", minLength: 8 },
           },
         },
-        // Application payloads (from src/validation/application.zod.ts)
-        AccountInfo: {
-          type: "object",
-          required: ["firstname", "lastname", "email", "phoneNumber"],
-          properties: {
-            firstname: { type: "string" },
-            middleName: { type: "string" },
-            lastname: { type: "string" },
-            email: { type: "string", format: "email" },
-            phoneNumber: { type: "string" },
-            telephoneNumber: { type: "string" },
-            gender: { type: "string", enum: ["Male", "Female", "Other"] },
-            designation: { type: "string" }
-          }
-        },
+        // Application payloads (flattened; see src/validation/application.zod.ts)
         ProviderApplication: {
           type: "object",
-          required: ["account", "registration"],
+          required: [
+            "nameOfInstitution",
+            "businessRegistrationNumber",
+            "tin",
+            "dateIncorporated",
+            "employeeSize",
+            "emailAddress",
+            "mobileNumber",
+            "physicalAddress",
+            "ghanaPostAddress",
+            "coreBusinessService"
+          ],
           properties: {
-            account: { $ref: "#/components/schemas/AccountInfo" },
-            registration: {
-              type: "object",
-              required: [
-                "nameOfInstitution",
-                "businessRegistrationNumber",
-                "tin",
-                "dateIncorporated",
-                "employeeSize",
-                "emailAddress",
-                "mobileNumber",
-                "physicalAddress",
-                "ghanaPostAddress",
-                "coreBusinessService"
-              ],
-              properties: {
-                nameOfInstitution: { type: "string" },
-                businessRegistrationNumber: { type: "string" },
-                tin: { type: "string" },
-                dateIncorporated: { type: "string", format: "date" },
-                employeeSize: { type: "string" },
-                emailAddress: { type: "string", format: "email" },
-                website: { type: "string" },
-                mobileNumber: { type: "string" },
-                physicalAddress: { type: "string" },
-                postalAddress: { type: "string" },
-                ghanaPostAddress: { type: "string" },
-                coreBusinessService: { type: "string" },
-                description: { type: "string" }
-              }
-            }
+            nameOfInstitution: { type: "string" },
+            businessRegistrationNumber: { type: "string" },
+            tin: { type: "string" },
+            dateIncorporated: { type: "string" },
+            employeeSize: { type: "string" },
+            emailAddress: { type: "string", format: "email" },
+            website: { type: "string" },
+            mobileNumber: { type: "string" },
+            physicalAddress: { type: "string" },
+            postalAddress: { type: "string" },
+            ghanaPostAddress: { type: "string" },
+            coreBusinessService: { type: "string" },
+            description: { type: "string" }
           }
         },
         ProfessionalApplication: {
           type: "object",
-          required: ["account", "professional"],
+          required: [
+            "professionalType",
+            "designation",
+            "nationalIdType",
+            "idNumber",
+            "city",
+            "address",
+            "yearsOfExperience",
+            "registeringAs"
+          ],
           properties: {
-            account: { $ref: "#/components/schemas/AccountInfo" },
-            professional: {
-              type: "object",
-              required: [
-                "professionalType",
-                "designation",
-                "nationalIdType",
-                "idNumber",
-                "city",
-                "address",
-                "yearsOfExperience",
-                "registeringAs"
-              ],
-              properties: {
-                professionalType: { type: "string", enum: ["Local", "Foreign"] },
-                designation: { type: "string" },
-                nationalIdType: { type: "string", enum: ["Ghana Card", "Passport"] },
-                idNumber: { type: "string" },
-                country: { type: "string" },
-                city: { type: "string" },
-                address: { type: "string" },
-                yearsOfExperience: { type: "number", minimum: 0 },
-                institutionName: { type: "string" },
-                institutionPhoneNumber: { type: "string" },
-                registeringAs: { type: "string", enum: ["Cybersecurity Professional", "Other"] },
-                otherDetails: { type: "string" }
-              }
-            }
+            professionalType: { type: "string", enum: ["Local", "Foreign"] },
+            designation: { type: "string" },
+            nationalIdType: { type: "string", enum: ["Ghana Card", "Passport"] },
+            idNumber: { type: "string" },
+            country: { type: "string" },
+            city: { type: "string" },
+            address: { type: "string" },
+            yearsOfExperience: { type: "number", minimum: 0 },
+            institutionName: { type: "string" },
+            institutionPhoneNumber: { type: "string" },
+            registeringAs: { type: "string", enum: ["Cybersecurity Professional", "Other"] },
+            otherDetails: { type: "string" }
           }
         },
         EstablishmentApplication: {
           type: "object",
-          required: ["account", "establishment"],
+          required: [
+            "sector",
+            "name",
+            "businessRegistrationNumber",
+            "tin",
+            "dateIncorporated",
+            "employeeSize",
+            "emailAddress",
+            "mobileNumber",
+            "physicalAddress",
+            "ghanaPostAddress",
+            "coreBusinessService"
+          ],
           properties: {
-            account: { $ref: "#/components/schemas/AccountInfo" },
-            establishment: {
-              type: "object",
-              required: [
-                "sector",
-                "name",
-                "businessRegistrationNumber",
-                "tin",
-                "dateIncorporated",
-                "employeeSize",
-                "emailAddress",
-                "mobileNumber",
-                "physicalAddress",
-                "ghanaPostAddress",
-                "coreBusinessService"
-              ],
-              properties: {
-                sector: { type: "string" },
-                name: { type: "string" },
-                businessRegistrationNumber: { type: "string" },
-                tin: { type: "string" },
-                dateIncorporated: { type: "string" },
-                employeeSize: { type: "string" },
-                noOfAccreditedProfessionals: { type: "number" },
-                emailAddress: { type: "string", format: "email" },
-                website: { type: "string" },
-                mobileNumber: { type: "string" },
-                physicalAddress: { type: "string" },
-                postalAddress: { type: "string" },
-                ghanaPostAddress: { type: "string" },
-                coreBusinessService: { type: "string" },
-                description: { type: "string" }
-              }
-            }
+            sector: { type: "string" },
+            name: { type: "string" },
+            businessRegistrationNumber: { type: "string" },
+            tin: { type: "string" },
+            dateIncorporated: { type: "string" },
+            employeeSize: { type: "string" },
+            noOfAccreditedProfessionals: { type: "number" },
+            emailAddress: { type: "string", format: "email" },
+            website: { type: "string" },
+            mobileNumber: { type: "string" },
+            physicalAddress: { type: "string" },
+            postalAddress: { type: "string" },
+            ghanaPostAddress: { type: "string" },
+            coreBusinessService: { type: "string" },
+            description: { type: "string" }
           }
         },
         // Admin payloads (from src/validation/admin.schema.ts)
