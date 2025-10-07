@@ -110,6 +110,16 @@ export const swaggerSpec = swaggerJSDoc({
                 { $ref: "#/components/schemas/ProfessionalRegistrationApplication" },
                 { $ref: "#/components/schemas/EstablishmentRegistrationApplication" },
               ],
+              discriminator: {
+                propertyName: "type",
+                mapping: {
+                  PROVIDER: "#/components/schemas/ProviderRegistrationApplication",
+                  PROFESSIONAL: "#/components/schemas/ProfessionalRegistrationApplication",
+                  ESTABLISHMENT: "#/components/schemas/EstablishmentRegistrationApplication",
+                },
+              },
+              description:
+                "Application payload. Set 'type' to one of: PROVIDER | PROFESSIONAL | ESTABLISHMENT. The 'data' object must match the selected type.",
             },
           },
         },
