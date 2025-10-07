@@ -334,6 +334,10 @@ export const swaggerSpec = swaggerJSDoc({
                         confirmPassword: "Password123!",
                         firstName: "John",
                         lastName: "Doe",
+                        phoneNumber: "+15550001111",
+                        telephoneNumber: "+15550002222",
+                        gender: "Male",
+                        designation: "Manager",
                       },
                       application: {
                         type: "PROVIDER",
