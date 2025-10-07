@@ -1,7 +1,10 @@
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
+import mongoose, { ClientSession } from "mongoose";
 import User from "../models/user.model";
 import config from "../config";
+import { createDraft } from "./application.service";
+import type { ApplicationType } from "../types/types";
 import type {
   IJwtPayload,
   UserRole as UserRoleT,
@@ -21,7 +24,8 @@ function signToken(payload: IJwtPayload) {
 /**
  * Register new user
  */
-export async function register(data: {
+export async function register(
+  data: {
   email: string;
   password: string;
   confirmPassword?: string;
@@ -33,12 +37,15 @@ export async function register(data: {
   role?: UserRoleT;
   designation?: string;
   gender?: string;
-}) {
+  },
+  options?: { session?: ClientSession }
+) {
   const exists = await User.findOne({ email: data.email.toLowerCase() });
   if (exists)
     throw Object.assign(new Error("Email already in use"), { status: 409 });
 
-  const user = await User.create({
+  const user = await User.create([
+    {
     email: data.email,
     password: data.password,
     confirmPassword: data.confirmPassword,
@@ -51,7 +58,8 @@ export async function register(data: {
     designation: data.designation,
     gender: data.gender,
     status: UserStatus.ACTIVE,
-  });
+    },
+  ], { session: options?.session }).then((docs) => docs[0]);
 
   await logAudit({
     action: AuditAction.USER_REGISTERED as AuditActionT,
@@ -67,6 +75,48 @@ export async function register(data: {
   });
 
   return { user, token };
+}
+
+/**
+ * Register user and create initial application in one operation
+ */
+export async function registerWithApplication(args: {
+  user: {
+    email: string;
+    password: string;
+    confirmPassword?: string;
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+    phoneNumber?: string;
+    telephoneNumber?: string;
+    role?: UserRoleT;
+    designation?: string;
+    gender?: string;
+  };
+  application: { type: ApplicationType; data: any };
+}) {
+  const session = await mongoose.startSession();
+  try {
+    let result: { user: any; token: string; application: any } | undefined;
+    await session.withTransaction(async () => {
+      // Step 1: create user within transaction
+      const { user, token } = await register(args.user, { session });
+
+      // Step 2: create application draft within same transaction
+      const application = await createDraft({
+        applicantUserId: String(user._id),
+        type: args.application.type,
+        data: args.application.data,
+        _session: session,
+      } as any);
+
+      result = { user, token, application };
+    });
+    return result!;
+  } finally {
+    session.endSession();
+  }
 }
 
 /**

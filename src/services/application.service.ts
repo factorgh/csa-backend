@@ -1,4 +1,5 @@
 import Application, { IApplication } from "../models/application.model";
+import type { ClientSession } from "mongoose";
 import License from "../models/license.model";
 import { ApplicationStatus, ApplicationType } from "../types/types";
 import {
@@ -12,13 +13,16 @@ export async function createDraft(params: {
   applicantUserId: string;
   type: ApplicationType;
   data: any;
+  _session?: ClientSession;
 }): Promise<IApplication> {
-  const app = await Application.create({
-    applicantUserId: params.applicantUserId,
-    type: params.type,
-    status: ApplicationStatus.PENDING,
-    data: params.data,
-  } as any);
+  const app = await Application.create([
+    {
+      applicantUserId: params.applicantUserId,
+      type: params.type,
+      status: ApplicationStatus.PENDING,
+      data: params.data,
+    } as any,
+  ], { session: params._session }).then((docs) => docs[0]);
   await logAudit({
     action: AuditAction.APPLICATION_CREATED,
     actorUserId: params.applicantUserId,

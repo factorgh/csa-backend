@@ -40,6 +40,20 @@ export async function register(req: Request, res: Response) {
 }
 
 /**
+ * Register new user and create initial application in one call
+ */
+export async function registerWithApplication(req: Request, res: Response) {
+  const { user, application } = req.body;
+
+  const result = await AuthService.registerWithApplication({
+    user,
+    application,
+  });
+
+  res.status(201).json({ success: true, data: result });
+}
+
+/**
  * Login
  */
 export async function login(req: Request, res: Response) {

@@ -32,6 +32,15 @@ export const swaggerSpec = swaggerJSDoc({
           scheme: "bearer",
           bearerFormat: "JWT",
         },
+        // Composite App payloads used for registration (type + data)
+        ProviderRegistrationApplication: {
+          type: "object",
+          required: ["type", "data"],
+          properties: {
+            type: { type: "string", enum: ["PROVIDER"] },
+            data: { $ref: "#/components/schemas/ProviderApplication" },
+          },
+        },
       },
       schemas: {
         ApiResponse: {
@@ -66,6 +75,45 @@ export const swaggerSpec = swaggerJSDoc({
             role: {
               type: "string",
               enum: ["APPLICANT", "ADMIN", "REVIEWER", "SUPERADMIN"],
+            },
+          },
+        },
+        RegisterWithApplicationRequest: {
+          type: "object",
+          required: ["user", "application"],
+          properties: {
+            user: {
+              type: "object",
+              required: [
+                "email",
+                "password",
+                "confirmPassword",
+                "firstName",
+                "lastName",
+              ],
+              properties: {
+                email: { type: "string", format: "email" },
+                password: { type: "string", minLength: 8 },
+                confirmPassword: { type: "string", minLength: 8 },
+                firstName: { type: "string" },
+                lastName: { type: "string" },
+                middleName: { type: "string" },
+                phoneNumber: { type: "string" },
+                telephoneNumber: { type: "string" },
+                designation: { type: "string" },
+                gender: { type: "string", enum: ["Male", "Female", "Other"] },
+                role: {
+                  type: "string",
+                  enum: ["APPLICANT", "ADMIN", "REVIEWER", "SUPERADMIN"],
+                },
+              },
+            },
+            application: {
+              oneOf: [
+                { $ref: "#/components/schemas/ProviderRegistrationApplication" },
+                { $ref: "#/components/schemas/ProfessionalRegistrationApplication" },
+                { $ref: "#/components/schemas/EstablishmentRegistrationApplication" },
+              ],
             },
           },
         },
@@ -221,6 +269,33 @@ export const swaggerSpec = swaggerJSDoc({
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/RegisterRequest" },
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Created",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ApiResponse" },
+                },
+              },
+            },
+            "409": { description: "Conflict" },
+          },
+        },
+      },
+      [`${base}/auth/register-with-application`]: {
+        post: {
+          tags: ["Auth"],
+          summary: "Register user and create initial application",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/RegisterWithApplicationRequest",
+                },
               },
             },
           },

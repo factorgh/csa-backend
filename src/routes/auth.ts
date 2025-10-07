@@ -6,6 +6,7 @@ import {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  registerWithApplicationSchema,
 } from "../validation/auth.schema";
 import { authenticate } from "../middleware/auth.middleware";
 
@@ -13,6 +14,11 @@ const router = Router();
 
 router.post("/register", validateBody(registerSchema), (req, res, next) =>
   AuthController.register(req, res).catch(next)
+);
+router.post(
+  "/register-with-application",
+  validateBody(registerWithApplicationSchema),
+  (req, res, next) => AuthController.registerWithApplication(req, res).catch(next)
 );
 router.post("/login", validateBody(loginSchema), (req, res, next) =>
   AuthController.login(req, res).catch(next)
