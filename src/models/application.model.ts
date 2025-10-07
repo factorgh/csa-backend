@@ -38,7 +38,7 @@ const applicationSchema = new Schema<IApplication>(
     status: {
       type: String,
       enum: Object.values(ApplicationStatus),
-      default: ApplicationStatus.DRAFT,
+      default: ApplicationStatus.PENDING,
     },
     data: {
       type: Schema.Types.Mixed,
