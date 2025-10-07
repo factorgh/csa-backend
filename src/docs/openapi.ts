@@ -32,17 +32,13 @@ export const swaggerSpec = swaggerJSDoc({
           scheme: "bearer",
           bearerFormat: "JWT",
         },
-        // Composite App payloads used for registration (type + data)
-        ProviderRegistrationApplication: {
-          type: "object",
-          required: ["type", "data"],
-          properties: {
-            type: { type: "string", enum: ["PROVIDER"] },
-            data: { $ref: "#/components/schemas/ProviderApplication" },
-          },
-        },
       },
       schemas: {
+        ApplicationType: {
+          type: "string",
+          description: "Available application types",
+          enum: ["PROVIDER", "PROFESSIONAL", "ESTABLISHMENT"],
+        },
         ApiResponse: {
           type: "object",
           properties: {
@@ -222,6 +218,31 @@ export const swaggerSpec = swaggerJSDoc({
             description: { type: "string" },
           },
         },
+        // Composite App payloads used for registration (type + data)
+        ProviderRegistrationApplication: {
+          type: "object",
+          required: ["type", "data"],
+          properties: {
+            type: { type: "string", enum: ["PROVIDER"] },
+            data: { $ref: "#/components/schemas/ProviderApplication" },
+          },
+        },
+        ProfessionalRegistrationApplication: {
+          type: "object",
+          required: ["type", "data"],
+          properties: {
+            type: { type: "string", enum: ["PROFESSIONAL"] },
+            data: { $ref: "#/components/schemas/ProfessionalApplication" },
+          },
+        },
+        EstablishmentRegistrationApplication: {
+          type: "object",
+          required: ["type", "data"],
+          properties: {
+            type: { type: "string", enum: ["ESTABLISHMENT"] },
+            data: { $ref: "#/components/schemas/EstablishmentApplication" },
+          },
+        },
         // Admin payloads (from src/validation/admin.schema.ts)
         ReviewRequest: {
           type: "object",
@@ -295,6 +316,88 @@ export const swaggerSpec = swaggerJSDoc({
               "application/json": {
                 schema: {
                   $ref: "#/components/schemas/RegisterWithApplicationRequest",
+                },
+                examples: {
+                  Provider: {
+                    summary: "Provider registration",
+                    value: {
+                      user: {
+                        email: "john.doe@example.com",
+                        password: "Password123!",
+                        confirmPassword: "Password123!",
+                        firstName: "John",
+                        lastName: "Doe",
+                      },
+                      application: {
+                        type: "PROVIDER",
+                        data: {
+                          nameOfInstitution: "Acme Cyber",
+                          businessRegistrationNumber: "BRN-12345",
+                          tin: "TIN-123456789",
+                          dateIncorporated: "2023-01-01",
+                          employeeSize: "11-50",
+                          emailAddress: "contact@acme.test",
+                          mobileNumber: "+15551234567",
+                          physicalAddress: "123 Main St",
+                          ghanaPostAddress: "GA-123-4567",
+                          coreBusinessService: "Managed Security",
+                        },
+                      },
+                    },
+                  },
+                  Professional: {
+                    summary: "Professional registration",
+                    value: {
+                      user: {
+                        email: "jane.pro@example.com",
+                        password: "Password123!",
+                        confirmPassword: "Password123!",
+                        firstName: "Jane",
+                        lastName: "Pro",
+                      },
+                      application: {
+                        type: "PROFESSIONAL",
+                        data: {
+                          professionalType: "Local",
+                          designation: "Analyst",
+                          nationalIdType: "Ghana Card",
+                          idNumber: "GHA-000111222",
+                          city: "Accra",
+                          address: "456 Side St",
+                          yearsOfExperience: 3,
+                          registeringAs: "Cybersecurity Professional",
+                        },
+                      },
+                    },
+                  },
+                  Establishment: {
+                    summary: "Establishment registration",
+                    value: {
+                      user: {
+                        email: "ops@example.com",
+                        password: "Password123!",
+                        confirmPassword: "Password123!",
+                        firstName: "Ops",
+                        lastName: "Team",
+                      },
+                      application: {
+                        type: "ESTABLISHMENT",
+                        data: {
+                          sector: "Finance",
+                          name: "Secure Bank",
+                          businessRegistrationNumber: "BRN-98765",
+                          tin: "TIN-987654321",
+                          dateIncorporated: "2019-05-20",
+                          employeeSize: "201-500",
+                          emailAddress: "info@securebank.test",
+                          mobileNumber: "+15557654321",
+                          physicalAddress: "789 Corporate Ave",
+                          ghanaPostAddress: "GA-765-4321",
+                          coreBusinessService: "Banking",
+                        },
+                      },
+                    },
+                  },
                 },
               },
             },
