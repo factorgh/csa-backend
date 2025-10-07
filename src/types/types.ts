@@ -79,63 +79,45 @@ export enum AuditAction {
 
 // Provider Application Data
 export interface IProviderData {
-  // Account Information
-  fullName: string;
-  email: string;
-  phone: string;
-  gender?: string;
-  designation?: string;
-
-  // Company Information
+  // Company Information (aligned with providerSchema)
   companyName: string;
   registrationNumber: string;
   tin: string;
   dateIncorporated: Date;
   employeeSize: string;
   companyPhone: string;
+  companyMobile?: string;
   companyEmail: string;
   physicalAddress: string;
   postalAddress?: string;
   website?: string;
   businessDescription: string;
-  serviceTypes?: string[];
+  coreBusinessService: string;
 }
 
 // Professional Application Data
 export interface IProfessionalData {
-  // Personal Information
-  fullName: string;
-  email: string;
-  phone: string;
-  gender?: string;
-  dateOfBirth?: Date;
-  nationality: string;
+  // Core fields (aligned with professionalSchema)
   professionalType: ProfessionalType;
-
-  // Professional Information
   designation: string;
   idType: string;
   idNumber: string;
+  country?: string;
+  city?: string;
   physicalAddress: string;
-  postalAddress?: string;
-  yearsOfExperience: number;
-  qualifications: string[];
+  yearsOfExperience?: number;
+  qualifications?: string[];
   certifications?: string[];
-  currentInstitution?: string;
+  institutionName?: string;
+  institutionPhoneNumber?: string;
   institutionAddress?: string;
   registeringAs: string;
-  specialization?: string[];
 }
 
 // Establishment Application Data
 export interface IEstablishmentData {
-  // Account Information
-  fullName: string;
-  email: string;
-  phone: string;
-  designation?: string;
-
-  // Establishment Information
+  // Establishment Information (aligned with establishmentSchema)
+  registeringAs: string;
   establishmentName: string;
   sector: string;
   registrationNumber: string;
@@ -146,10 +128,11 @@ export interface IEstablishmentData {
   establishmentEmail: string;
   physicalAddress: string;
   postalAddress?: string;
+  ghanaPostAddress?: string;
   website?: string;
   numberOfAccreditedProfessionals?: number;
-  complianceDescription?: string;
-  currentSecurityMeasures?: string[];
+  description?: string;
+  coreBusinessService?: string;
 }
 
 // Generic Application Data Union
