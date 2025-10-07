@@ -16,7 +16,7 @@ export async function createDraft(params: {
   const app = await Application.create({
     applicantUserId: params.applicantUserId,
     type: params.type,
-    status: ApplicationStatus.DRAFT,
+    status: ApplicationStatus.PENDING,
     data: params.data,
   } as any);
   await logAudit({
@@ -75,7 +75,7 @@ export async function submit(
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
   if (
-    ![ApplicationStatus.DRAFT, ApplicationStatus.PENDING_DOCUMENTS].includes(
+    ![ApplicationStatus.PENDING, ApplicationStatus.PENDING_DOCUMENTS].includes(
       app.status
     )
   ) {
