@@ -45,14 +45,13 @@ export const swaggerSpec = swaggerJSDoc({
         },
         RegisterRequest: {
           type: "object",
-          required: ["email", "password", "fullName", "designation", "gender"],
+          required: ["email", "password", "fullName"],
           properties: {
             email: { type: "string", format: "email" },
             password: { type: "string", minLength: 8 },
             fullName: { type: "string" },
             phone: { type: "string" },
-            designation: { type: "string" },
-            gender: { type: "string" },
+            // Note: designation & gender are not validated/used by the current register endpoint
           },
         },
         LoginRequest: {
@@ -63,9 +62,165 @@ export const swaggerSpec = swaggerJSDoc({
             password: { type: "string", minLength: 8 },
           },
         },
-        ProviderApplication: { type: "object" },
-        ProfessionalApplication: { type: "object" },
-        EstablishmentApplication: { type: "object" },
+        // Application payloads (from src/validation/application.zod.ts)
+        AccountInfo: {
+          type: "object",
+          required: ["firstname", "lastname", "email", "phoneNumber"],
+          properties: {
+            firstname: { type: "string" },
+            middleName: { type: "string" },
+            lastname: { type: "string" },
+            email: { type: "string", format: "email" },
+            phoneNumber: { type: "string" },
+            telephoneNumber: { type: "string" },
+            gender: { type: "string", enum: ["Male", "Female", "Other"] },
+            designation: { type: "string" }
+          }
+        },
+        ProviderApplication: {
+          type: "object",
+          required: ["account", "registration"],
+          properties: {
+            account: { $ref: "#/components/schemas/AccountInfo" },
+            registration: {
+              type: "object",
+              required: [
+                "nameOfInstitution",
+                "businessRegistrationNumber",
+                "tin",
+                "dateIncorporated",
+                "employeeSize",
+                "emailAddress",
+                "mobileNumber",
+                "physicalAddress",
+                "ghanaPostAddress",
+                "coreBusinessService"
+              ],
+              properties: {
+                nameOfInstitution: { type: "string" },
+                businessRegistrationNumber: { type: "string" },
+                tin: { type: "string" },
+                dateIncorporated: { type: "string", format: "date" },
+                employeeSize: { type: "string" },
+                emailAddress: { type: "string", format: "email" },
+                website: { type: "string" },
+                mobileNumber: { type: "string" },
+                physicalAddress: { type: "string" },
+                postalAddress: { type: "string" },
+                ghanaPostAddress: { type: "string" },
+                coreBusinessService: { type: "string" },
+                description: { type: "string" }
+              }
+            }
+          }
+        },
+        ProfessionalApplication: {
+          type: "object",
+          required: ["account", "professional"],
+          properties: {
+            account: { $ref: "#/components/schemas/AccountInfo" },
+            professional: {
+              type: "object",
+              required: [
+                "professionalType",
+                "designation",
+                "nationalIdType",
+                "idNumber",
+                "city",
+                "address",
+                "yearsOfExperience",
+                "registeringAs"
+              ],
+              properties: {
+                professionalType: { type: "string", enum: ["Local", "Foreign"] },
+                designation: { type: "string" },
+                nationalIdType: { type: "string", enum: ["Ghana Card", "Passport"] },
+                idNumber: { type: "string" },
+                country: { type: "string" },
+                city: { type: "string" },
+                address: { type: "string" },
+                yearsOfExperience: { type: "number", minimum: 0 },
+                institutionName: { type: "string" },
+                institutionPhoneNumber: { type: "string" },
+                registeringAs: { type: "string", enum: ["Cybersecurity Professional", "Other"] },
+                otherDetails: { type: "string" }
+              }
+            }
+          }
+        },
+        EstablishmentApplication: {
+          type: "object",
+          required: ["account", "establishment"],
+          properties: {
+            account: { $ref: "#/components/schemas/AccountInfo" },
+            establishment: {
+              type: "object",
+              required: [
+                "sector",
+                "name",
+                "businessRegistrationNumber",
+                "tin",
+                "dateIncorporated",
+                "employeeSize",
+                "emailAddress",
+                "mobileNumber",
+                "physicalAddress",
+                "ghanaPostAddress",
+                "coreBusinessService"
+              ],
+              properties: {
+                sector: { type: "string" },
+                name: { type: "string" },
+                businessRegistrationNumber: { type: "string" },
+                tin: { type: "string" },
+                dateIncorporated: { type: "string" },
+                employeeSize: { type: "string" },
+                noOfAccreditedProfessionals: { type: "number" },
+                emailAddress: { type: "string", format: "email" },
+                website: { type: "string" },
+                mobileNumber: { type: "string" },
+                physicalAddress: { type: "string" },
+                postalAddress: { type: "string" },
+                ghanaPostAddress: { type: "string" },
+                coreBusinessService: { type: "string" },
+                description: { type: "string" }
+              }
+            }
+          }
+        },
+        // Admin payloads (from src/validation/admin.schema.ts)
+        ReviewRequest: {
+          type: "object",
+          properties: { notes: { type: "string", nullable: true } }
+        },
+        ApproveRequest: {
+          type: "object",
+          properties: { expiresAt: { type: "string", format: "date-time" } }
+        },
+        RejectRequest: {
+          type: "object",
+          required: ["comment"],
+          properties: { comment: { type: "string" } }
+        },
+        RequestDocsRequest: {
+          type: "object",
+          required: ["docs"],
+          properties: { docs: { type: "array", items: { type: "string" } } }
+        },
+        // Auth extra payloads
+        ForgotPasswordRequest: {
+          type: "object",
+          required: ["email"],
+          properties: { email: { type: "string", format: "email" } }
+        },
+        ResetPasswordRequest: {
+          type: "object",
+          required: ["token", "password"],
+          properties: {
+            token: { type: "string" },
+            password: { type: "string", minLength: 8 }
+          }
+        }
       },
     },
     security: [{ bearerAuth: [] }],
@@ -114,6 +269,36 @@ export const swaggerSpec = swaggerJSDoc({
           },
         },
       },
+      [`${base}/auth/forgot-password`]: {
+        post: {
+          tags: ["Auth"],
+          summary: "Forgot password",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ForgotPasswordRequest" }
+              }
+            }
+          },
+          responses: { "200": { description: "OK" } }
+        }
+      },
+      [`${base}/auth/reset-password`]: {
+        post: {
+          tags: ["Auth"],
+          summary: "Reset password",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ResetPasswordRequest" }
+              }
+            }
+          },
+          responses: { "200": { description: "OK" } }
+        }
+      },
       [`${base}/auth/me`]: {
         get: {
           tags: ["Auth"],
@@ -148,7 +333,14 @@ export const swaggerSpec = swaggerJSDoc({
         post: {
           tags: ["Applications"],
           summary: "Create professional application (draft)",
-          requestBody: { required: true },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ProfessionalApplication" }
+              }
+            }
+          },
           responses: { "201": { description: "Created" } },
         },
       },
@@ -156,7 +348,14 @@ export const swaggerSpec = swaggerJSDoc({
         post: {
           tags: ["Applications"],
           summary: "Create establishment application (draft)",
-          requestBody: { required: true },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/EstablishmentApplication" }
+              }
+            }
+          },
           responses: { "201": { description: "Created" } },
         },
       },
@@ -187,7 +386,20 @@ export const swaggerSpec = swaggerJSDoc({
           tags: ["Applications"],
           summary: "Update application draft",
           parameters: [{ in: "path", name: "id", required: true }],
-          requestBody: { required: true },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  oneOf: [
+                    { $ref: "#/components/schemas/ProviderApplication" },
+                    { $ref: "#/components/schemas/ProfessionalApplication" },
+                    { $ref: "#/components/schemas/EstablishmentApplication" }
+                  ]
+                }
+              }
+            }
+          },
           responses: { "200": { description: "OK" } },
         },
       },
@@ -232,6 +444,8 @@ export const swaggerSpec = swaggerJSDoc({
             { in: "query", name: "status", schema: { type: "string" } },
             { in: "query", name: "page", schema: { type: "integer" } },
             { in: "query", name: "limit", schema: { type: "integer" } },
+            { in: "query", name: "startDate", schema: { type: "string", format: "date-time" } },
+            { in: "query", name: "endDate", schema: { type: "string", format: "date-time" } },
           ],
           responses: { "200": { description: "OK" } },
         },
@@ -249,7 +463,14 @@ export const swaggerSpec = swaggerJSDoc({
           tags: ["Admin"],
           summary: "Set Under Review",
           parameters: [{ in: "path", name: "id", required: true }],
-          requestBody: { required: true },
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ReviewRequest" }
+              }
+            }
+          },
           responses: { "200": { description: "OK" } },
         },
       },
@@ -258,7 +479,14 @@ export const swaggerSpec = swaggerJSDoc({
           tags: ["Admin"],
           summary: "Approve application",
           parameters: [{ in: "path", name: "id", required: true }],
-          requestBody: { required: false },
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ApproveRequest" }
+              }
+            }
+          },
           responses: { "200": { description: "OK" } },
         },
       },
@@ -267,7 +495,14 @@ export const swaggerSpec = swaggerJSDoc({
           tags: ["Admin"],
           summary: "Reject application",
           parameters: [{ in: "path", name: "id", required: true }],
-          requestBody: { required: true },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/RejectRequest" }
+              }
+            }
+          },
           responses: { "200": { description: "OK" } },
         },
       },
@@ -276,7 +511,14 @@ export const swaggerSpec = swaggerJSDoc({
           tags: ["Admin"],
           summary: "Request documents",
           parameters: [{ in: "path", name: "id", required: true }],
-          requestBody: { required: true },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/RequestDocsRequest" }
+              }
+            }
+          },
           responses: { "200": { description: "OK" } },
         },
       },
