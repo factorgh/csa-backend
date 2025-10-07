@@ -94,9 +94,18 @@ export async function stats(_req: Request, res: Response) {
 }
 
 export async function audit(_req: Request, res: Response) {
-  // simple passthrough, filtering can be added
   const { default: Audit } = await import("../models/audit.model");
-  const list = await Audit.find({}).sort({ createdAt: -1 }).limit(500);
+  const { action, userId, startDate, endDate, limit } = _req.query as any;
+  const q: any = {};
+  if (action) q.action = action;
+  if (userId) q.actorUserId = userId;
+  if (startDate || endDate) {
+    q.createdAt = {} as any;
+    if (startDate) q.createdAt.$gte = new Date(String(startDate));
+    if (endDate) q.createdAt.$lte = new Date(String(endDate));
+  }
+  const max = Math.min(2000, Number(limit) || 500);
+  const list = await Audit.find(q).sort({ createdAt: -1 }).limit(max);
   return res.json({ success: true, data: list });
 }
 
@@ -115,4 +124,29 @@ export async function listUsers(req: Request, res: Response) {
 export async function getUser(req: Request, res: Response) {
   const user = await AdminService.getUserById(req.params.id);
   res.json({ success: true, data: user });
+}
+
+export async function exportApplicantsCsv(req: Request, res: Response) {
+  const filter: any = {};
+  if (req.query.type) filter.type = req.query.type;
+  if (req.query.status) filter.status = req.query.status;
+  if (req.query.startDate || req.query.endDate) {
+    filter.createdAt = {} as any;
+    if (req.query.startDate)
+      filter.createdAt.$gte = new Date(String(req.query.startDate));
+    if (req.query.endDate)
+      filter.createdAt.$lte = new Date(String(req.query.endDate));
+  }
+  const { data } = await AdminService.listApplications(filter, {
+    page: 1,
+    limit: 1000,
+  });
+  const header = ["id", "type", "status", "createdAt"].join(",");
+  const lines = (data as any[]).map((a) =>
+    [a._id, a.type, a.status, a.createdAt?.toISOString?.() || ""].join(",")
+  );
+  const csv = [header, ...lines].join("\n");
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", "attachment; filename=applicants.csv");
+  res.status(200).send(csv);
 }

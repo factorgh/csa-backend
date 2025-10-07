@@ -32,6 +32,64 @@ export const swaggerSpec = swaggerJSDoc({
           scheme: "bearer",
           bearerFormat: "JWT",
         },
+        Dropdown: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            category: {
+              type: "string",
+              enum: [
+                "SECTOR",
+                "EMPLOYEE_SIZE",
+                "PROFESSIONAL_TYPE",
+                "DESIGNATION",
+                "ID_TYPE",
+                "SERVICE_TYPE",
+              ],
+            },
+            label: { type: "string" },
+            value: { type: "string" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        DropdownUpsertRequest: {
+          type: "object",
+          required: ["category", "label", "value"],
+          properties: {
+            category: {
+              $ref: "#/components/schemas/Dropdown/properties/category",
+            },
+            label: { type: "string" },
+            value: { type: "string" },
+          },
+        },
+      },
+      schemas: {
+        User: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            email: { type: "string", format: "email" },
+            firstName: { type: "string" },
+            lastName: { type: "string" },
+            middleName: { type: "string" },
+            phoneNumber: { type: "string" },
+            telephoneNumber: { type: "string" },
+            role: {
+              type: "string",
+              enum: ["APPLICANT", "ADMIN", "REVIEWER", "SUPERADMIN"],
+            },
+            gender: { type: "string", enum: ["Male", "Female", "Other"] },
+            status: {
+              type: "string",
+              enum: ["ACTIVE", "SUSPENDED", "DELETED"],
+            },
+            lastLoginAt: { type: "string", format: "date-time" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
         License: {
           type: "object",
           properties: {
@@ -52,35 +110,6 @@ export const swaggerSpec = swaggerJSDoc({
             createdAt: { type: "string", format: "date-time" },
             updatedAt: { type: "string", format: "date-time" },
           },
-        },
-      },
-      schemas: {
-        User: {
-          type: "object",
-          properties: {
-            _id: { type: "string" },
-            email: { type: "string", format: "email" },
-            firstName: { type: "string" },
-            lastName: { type: "string" },
-            middleName: { type: "string" },
-            phoneNumber: { type: "string" },
-            telephoneNumber: { type: "string" },
-            role: {
-              type: "string",
-              enum: ["APPLICANT", "ADMIN", "REVIEWER", "SUPERADMIN"],
-            },
-            designation: { type: "string" },
-            gender: { type: "string", enum: ["Male", "Female", "Other"] },
-            status: { type: "string", enum: ["ACTIVE", "SUSPENDED", "DELETED"] },
-            lastLoginAt: { type: "string", format: "date-time" },
-            createdAt: { type: "string", format: "date-time" },
-            updatedAt: { type: "string", format: "date-time" },
-          },
-        },
-        ApplicationType: {
-          type: "string",
-          description: "Available application types",
-          enum: ["PROVIDER", "PROFESSIONAL", "ESTABLISHMENT"],
         },
         ApiResponse: {
           type: "object",
@@ -374,7 +403,7 @@ export const swaggerSpec = swaggerJSDoc({
           },
         },
       },
-      
+
       // Auth
       [`${base}/auth/register`]: {
         post: {
@@ -731,6 +760,9 @@ export const swaggerSpec = swaggerJSDoc({
           parameters: [
             { in: "query", name: "type", schema: { type: "string" } },
             { in: "query", name: "status", schema: { type: "string" } },
+            { in: "query", name: "applicantName", schema: { type: "string" } },
+            { in: "query", name: "email", schema: { type: "string" } },
+            { in: "query", name: "institution", schema: { type: "string" } },
             { in: "query", name: "page", schema: { type: "integer" } },
             { in: "query", name: "limit", schema: { type: "integer" } },
             {
@@ -864,6 +896,28 @@ export const swaggerSpec = swaggerJSDoc({
         },
       },
       [`${base}/admin/users/{id}`]: {
+        get: {
+          tags: ["Admin"],
+          summary: "Get user by id",
+          parameters: [{ in: "path", name: "id", required: true }],
+          responses: {
+            "200": {
+              description: "OK",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean" },
+                      data: { $ref: "#/components/schemas/User" },
+                    },
+                  },
+                },
+              },
+            },
+            "404": { description: "Not found" },
+          },
+        },
         patch: {
           tags: ["Admin"],
           summary: "Suspend/Reactivate user",
@@ -889,6 +943,21 @@ export const swaggerSpec = swaggerJSDoc({
         get: {
           tags: ["Admin"],
           summary: "Audit logs",
+          parameters: [
+            { in: "query", name: "action", schema: { type: "string" } },
+            { in: "query", name: "userId", schema: { type: "string" } },
+            {
+              in: "query",
+              name: "startDate",
+              schema: { type: "string", format: "date-time" },
+            },
+            {
+              in: "query",
+              name: "endDate",
+              schema: { type: "string", format: "date-time" },
+            },
+            { in: "query", name: "limit", schema: { type: "integer" } },
+          ],
           responses: { "200": { description: "OK" } },
         },
       },
@@ -906,6 +975,64 @@ export const swaggerSpec = swaggerJSDoc({
           tags: ["Dropdowns"],
           summary: "Manage dropdowns (admin)",
           responses: { "200": { description: "OK" } },
+        },
+      },
+      [`${base}/admin/dropdowns`]: {
+        post: {
+          tags: ["Admin"],
+          summary: "Create dropdown item",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/DropdownUpsertRequest" },
+              },
+            },
+          },
+          responses: { "201": { description: "Created" } },
+        },
+      },
+      [`${base}/admin/dropdowns/{id}`]: {
+        put: {
+          tags: ["Admin"],
+          summary: "Update dropdown item",
+          parameters: [{ in: "path", name: "id", required: true }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/DropdownUpsertRequest" },
+              },
+            },
+          },
+          responses: { "200": { description: "OK" } },
+        },
+        delete: {
+          tags: ["Admin"],
+          summary: "Delete dropdown item",
+          parameters: [{ in: "path", name: "id", required: true }],
+          responses: { "204": { description: "No Content" } },
+        },
+      },
+      [`${base}/admin/reports/applicants.csv`]: {
+        get: {
+          tags: ["Admin"],
+          summary: "Export applicants as CSV",
+          parameters: [
+            { in: "query", name: "type", schema: { type: "string" } },
+            { in: "query", name: "status", schema: { type: "string" } },
+            {
+              in: "query",
+              name: "startDate",
+              schema: { type: "string", format: "date-time" },
+            },
+            {
+              in: "query",
+              name: "endDate",
+              schema: { type: "string", format: "date-time" },
+            },
+          ],
+          responses: { "200": { description: "CSV stream" } },
         },
       },
       [`${base}/license/{licenseNumber}`]: {
