@@ -13,6 +13,8 @@ export interface IUser extends Document {
   fullName: string;
   phone?: string;
   role: UserRoleT;
+  designation?: string;
+  gender?: string;
   status: UserStatusT;
   lastLoginAt?: Date;
   passwordResetToken?: string;
@@ -51,6 +53,13 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: Object.values(UserRole),
       default: UserRole.APPLICANT,
+    } as any,
+    designation: {
+      type: String,
+    } as any,
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other"],
     } as any,
     status: {
       type: String,

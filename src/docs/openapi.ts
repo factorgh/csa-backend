@@ -20,7 +20,7 @@ export const swaggerSpec = swaggerJSDoc({
         description: "Local",
       },
       {
-        url: `https://csa-backend-lt2bkp3f3-factorghs-projects.vercel.app/api/${config.apiVersion}`,
+        url: `https://csa-backend-utuw.onrender.com/api/${config.apiVersion}`,
         description: "Production",
       },
     ],
@@ -45,12 +45,14 @@ export const swaggerSpec = swaggerJSDoc({
         },
         RegisterRequest: {
           type: "object",
-          required: ["email", "password", "fullName"],
+          required: ["email", "password", "fullName", "designation", "gender"],
           properties: {
             email: { type: "string", format: "email" },
             password: { type: "string", minLength: 8 },
             fullName: { type: "string" },
             phone: { type: "string" },
+            designation: { type: "string" },
+            gender: { type: "string" },
           },
         },
         LoginRequest: {
