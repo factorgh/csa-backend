@@ -10,8 +10,12 @@ export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   email: string;
   password: string;
-  fullName: string;
-  phone?: string;
+  confirmPassword?: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  phoneNumber?: string;
+  telephoneNumber?: string;
   role: UserRoleT;
   designation?: string;
   gender?: string;
@@ -40,12 +44,40 @@ const userSchema = new Schema<IUser>(
       minlength: [8, "Password must be at least 8 characters"],
       select: false,
     },
-    fullName: {
+    confirmPassword: {
       type: String,
-      required: [true, "Full name is required"],
+      required: function (this: any) {
+        return this.isNew || this.isModified("password");
+      },
+      minlength: [8, "Confirm Password must be at least 8 characters"],
+      validate: {
+        validator: function (this: any, value: string): boolean {
+          // Only runs on CREATE and SAVE
+          return value === this.password;
+        },
+        message: "Passwords do not match",
+      },
+      select: false,
+    },
+    firstName: {
+      type: String,
+      required: [true, "First name is required"],
       trim: true,
     },
-    phone: {
+    lastName: {
+      type: String,
+      required: [true, "Last name is required"],
+      trim: true,
+    },
+    middleName: {
+      type: String,
+      trim: true,
+    },
+    phoneNumber: {
+      type: String,
+      trim: true,
+    },
+    telephoneNumber: {
       type: String,
       trim: true,
     },
@@ -83,11 +115,9 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Hash password before saving
+// 🔐 Hash password before saving
 userSchema.pre("save", async function (this: any, next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+  if (!this.isModified("password")) return next();
 
   try {
     const salt = await bcrypt.genSalt(12);
@@ -98,7 +128,7 @@ userSchema.pre("save", async function (this: any, next) {
   }
 });
 
-// Compare password method
+// 🔑 Compare password method
 userSchema.methods.comparePassword = async function (
   this: any,
   candidatePassword: string
@@ -110,10 +140,11 @@ userSchema.methods.comparePassword = async function (
   }
 };
 
-// Remove sensitive data from JSON
+// 🧹 Remove sensitive data from JSON
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
+  delete obj.confirmPassword;
   delete obj.passwordResetToken;
   delete obj.passwordResetExpires;
   return obj;

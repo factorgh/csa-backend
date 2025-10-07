@@ -45,13 +45,28 @@ export const swaggerSpec = swaggerJSDoc({
         },
         RegisterRequest: {
           type: "object",
-          required: ["email", "password", "fullName"],
+          required: [
+            "email",
+            "password",
+            "confirmPassword",
+            "firstName",
+            "lastName",
+          ],
           properties: {
             email: { type: "string", format: "email" },
             password: { type: "string", minLength: 8 },
-            fullName: { type: "string" },
-            phone: { type: "string" },
-            // Note: designation & gender are not validated/used by the current register endpoint
+            confirmPassword: { type: "string", minLength: 8 },
+            firstName: { type: "string" },
+            lastName: { type: "string" },
+            middleName: { type: "string" },
+            phoneNumber: { type: "string" },
+            telephoneNumber: { type: "string" },
+            designation: { type: "string" },
+            gender: { type: "string", enum: ["Male", "Female", "Other"] },
+            role: {
+              type: "string",
+              enum: ["APPLICANT", "ADMIN", "REVIEWER", "SUPERADMIN"],
+            },
           },
         },
         LoginRequest: {
@@ -75,7 +90,7 @@ export const swaggerSpec = swaggerJSDoc({
             "mobileNumber",
             "physicalAddress",
             "ghanaPostAddress",
-            "coreBusinessService"
+            "coreBusinessService",
           ],
           properties: {
             nameOfInstitution: { type: "string" },
@@ -90,8 +105,8 @@ export const swaggerSpec = swaggerJSDoc({
             postalAddress: { type: "string" },
             ghanaPostAddress: { type: "string" },
             coreBusinessService: { type: "string" },
-            description: { type: "string" }
-          }
+            description: { type: "string" },
+          },
         },
         ProfessionalApplication: {
           type: "object",
@@ -103,12 +118,15 @@ export const swaggerSpec = swaggerJSDoc({
             "city",
             "address",
             "yearsOfExperience",
-            "registeringAs"
+            "registeringAs",
           ],
           properties: {
             professionalType: { type: "string", enum: ["Local", "Foreign"] },
             designation: { type: "string" },
-            nationalIdType: { type: "string", enum: ["Ghana Card", "Passport"] },
+            nationalIdType: {
+              type: "string",
+              enum: ["Ghana Card", "Passport"],
+            },
             idNumber: { type: "string" },
             country: { type: "string" },
             city: { type: "string" },
@@ -116,9 +134,12 @@ export const swaggerSpec = swaggerJSDoc({
             yearsOfExperience: { type: "number", minimum: 0 },
             institutionName: { type: "string" },
             institutionPhoneNumber: { type: "string" },
-            registeringAs: { type: "string", enum: ["Cybersecurity Professional", "Other"] },
-            otherDetails: { type: "string" }
-          }
+            registeringAs: {
+              type: "string",
+              enum: ["Cybersecurity Professional", "Other"],
+            },
+            otherDetails: { type: "string" },
+          },
         },
         EstablishmentApplication: {
           type: "object",
@@ -133,7 +154,7 @@ export const swaggerSpec = swaggerJSDoc({
             "mobileNumber",
             "physicalAddress",
             "ghanaPostAddress",
-            "coreBusinessService"
+            "coreBusinessService",
           ],
           properties: {
             sector: { type: "string" },
@@ -150,42 +171,42 @@ export const swaggerSpec = swaggerJSDoc({
             postalAddress: { type: "string" },
             ghanaPostAddress: { type: "string" },
             coreBusinessService: { type: "string" },
-            description: { type: "string" }
-          }
+            description: { type: "string" },
+          },
         },
         // Admin payloads (from src/validation/admin.schema.ts)
         ReviewRequest: {
           type: "object",
-          properties: { notes: { type: "string", nullable: true } }
+          properties: { notes: { type: "string", nullable: true } },
         },
         ApproveRequest: {
           type: "object",
-          properties: { expiresAt: { type: "string", format: "date-time" } }
+          properties: { expiresAt: { type: "string", format: "date-time" } },
         },
         RejectRequest: {
           type: "object",
           required: ["comment"],
-          properties: { comment: { type: "string" } }
+          properties: { comment: { type: "string" } },
         },
         RequestDocsRequest: {
           type: "object",
           required: ["docs"],
-          properties: { docs: { type: "array", items: { type: "string" } } }
+          properties: { docs: { type: "array", items: { type: "string" } } },
         },
         // Auth extra payloads
         ForgotPasswordRequest: {
           type: "object",
           required: ["email"],
-          properties: { email: { type: "string", format: "email" } }
+          properties: { email: { type: "string", format: "email" } },
         },
         ResetPasswordRequest: {
           type: "object",
           required: ["token", "password"],
           properties: {
             token: { type: "string" },
-            password: { type: "string", minLength: 8 }
-          }
-        }
+            password: { type: "string", minLength: 8 },
+          },
+        },
       },
     },
     security: [{ bearerAuth: [] }],
@@ -242,12 +263,12 @@ export const swaggerSpec = swaggerJSDoc({
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/ForgotPasswordRequest" }
-              }
-            }
+                schema: { $ref: "#/components/schemas/ForgotPasswordRequest" },
+              },
+            },
           },
-          responses: { "200": { description: "OK" } }
-        }
+          responses: { "200": { description: "OK" } },
+        },
       },
       [`${base}/auth/reset-password`]: {
         post: {
@@ -257,12 +278,12 @@ export const swaggerSpec = swaggerJSDoc({
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/ResetPasswordRequest" }
-              }
-            }
+                schema: { $ref: "#/components/schemas/ResetPasswordRequest" },
+              },
+            },
           },
-          responses: { "200": { description: "OK" } }
-        }
+          responses: { "200": { description: "OK" } },
+        },
       },
       [`${base}/auth/me`]: {
         get: {
@@ -302,9 +323,11 @@ export const swaggerSpec = swaggerJSDoc({
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/ProfessionalApplication" }
-              }
-            }
+                schema: {
+                  $ref: "#/components/schemas/ProfessionalApplication",
+                },
+              },
+            },
           },
           responses: { "201": { description: "Created" } },
         },
@@ -317,9 +340,11 @@ export const swaggerSpec = swaggerJSDoc({
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/EstablishmentApplication" }
-              }
-            }
+                schema: {
+                  $ref: "#/components/schemas/EstablishmentApplication",
+                },
+              },
+            },
           },
           responses: { "201": { description: "Created" } },
         },
@@ -359,11 +384,11 @@ export const swaggerSpec = swaggerJSDoc({
                   oneOf: [
                     { $ref: "#/components/schemas/ProviderApplication" },
                     { $ref: "#/components/schemas/ProfessionalApplication" },
-                    { $ref: "#/components/schemas/EstablishmentApplication" }
-                  ]
-                }
-              }
-            }
+                    { $ref: "#/components/schemas/EstablishmentApplication" },
+                  ],
+                },
+              },
+            },
           },
           responses: { "200": { description: "OK" } },
         },
@@ -409,8 +434,16 @@ export const swaggerSpec = swaggerJSDoc({
             { in: "query", name: "status", schema: { type: "string" } },
             { in: "query", name: "page", schema: { type: "integer" } },
             { in: "query", name: "limit", schema: { type: "integer" } },
-            { in: "query", name: "startDate", schema: { type: "string", format: "date-time" } },
-            { in: "query", name: "endDate", schema: { type: "string", format: "date-time" } },
+            {
+              in: "query",
+              name: "startDate",
+              schema: { type: "string", format: "date-time" },
+            },
+            {
+              in: "query",
+              name: "endDate",
+              schema: { type: "string", format: "date-time" },
+            },
           ],
           responses: { "200": { description: "OK" } },
         },
@@ -432,9 +465,9 @@ export const swaggerSpec = swaggerJSDoc({
             required: false,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/ReviewRequest" }
-              }
-            }
+                schema: { $ref: "#/components/schemas/ReviewRequest" },
+              },
+            },
           },
           responses: { "200": { description: "OK" } },
         },
@@ -448,9 +481,9 @@ export const swaggerSpec = swaggerJSDoc({
             required: false,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/ApproveRequest" }
-              }
-            }
+                schema: { $ref: "#/components/schemas/ApproveRequest" },
+              },
+            },
           },
           responses: { "200": { description: "OK" } },
         },
@@ -464,9 +497,9 @@ export const swaggerSpec = swaggerJSDoc({
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/RejectRequest" }
-              }
-            }
+                schema: { $ref: "#/components/schemas/RejectRequest" },
+              },
+            },
           },
           responses: { "200": { description: "OK" } },
         },
@@ -480,9 +513,9 @@ export const swaggerSpec = swaggerJSDoc({
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/RequestDocsRequest" }
-              }
-            }
+                schema: { $ref: "#/components/schemas/RequestDocsRequest" },
+              },
+            },
           },
           responses: { "200": { description: "OK" } },
         },
