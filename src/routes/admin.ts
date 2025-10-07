@@ -2,9 +2,9 @@ import { Router } from 'express';
 import * as AdminController from '../controllers/admin.controller';
 import * as DropdownController from '../controllers/dropdown.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { isReviewer, isAdmin } from '../middleware/rbac.middleware';
+import { isReviewer, isAdmin, isSuperAdmin } from '../middleware/rbac.middleware';
 import { validateBody, validateQuery } from '../middleware/validation.middleware';
-import { reviewSchema, approveSchema, rejectSchema, requestDocsSchema, listAppsSchema } from '../validation/admin.schema';
+import { reviewSchema, approveSchema, rejectSchema, requestDocsSchema, listAppsSchema, createStaffSchema } from '../validation/admin.schema';
 
 const router = Router();
 
@@ -22,6 +22,7 @@ router.get('/users', isAdmin, (req, res, next) => AdminController.listUsers(req,
 router.get('/users/:id', isAdmin, (req, res, next) => AdminController.getUser(req, res).catch(next));
 router.patch('/users/:id', isAdmin, (req, res, next) => AdminController.updateUser(req, res).catch(next));
 router.delete('/users/:id', isAdmin, (req, res, next) => AdminController.deleteUser(req, res).catch(next));
+router.post('/users', isSuperAdmin, validateBody(createStaffSchema), (req, res, next) => AdminController.createStaff(req, res).catch(next));
 
 router.get('/stats', isReviewer, (req, res, next) => AdminController.stats(req, res).catch(next));
 router.get('/audit', isAdmin, (req, res, next) => AdminController.audit(req, res).catch(next));

@@ -342,18 +342,28 @@ export const swaggerSpec = swaggerJSDoc({
           required: ["docs"],
           properties: { docs: { type: "array", items: { type: "string" } } },
         },
-        // Auth extra payloads
-        ForgotPasswordRequest: {
+        CreateStaffRequest: {
           type: "object",
-          required: ["email"],
-          properties: { email: { type: "string", format: "email" } },
-        },
-        ResetPasswordRequest: {
-          type: "object",
-          required: ["token", "password"],
+          required: [
+            "email",
+            "password",
+            "confirmPassword",
+            "firstName",
+            "lastName",
+            "role",
+          ],
           properties: {
-            token: { type: "string" },
+            email: { type: "string", format: "email" },
             password: { type: "string", minLength: 8 },
+            confirmPassword: { type: "string", minLength: 8 },
+            firstName: { type: "string" },
+            lastName: { type: "string" },
+            middleName: { type: "string" },
+            phoneNumber: { type: "string" },
+            telephoneNumber: { type: "string" },
+            designation: { type: "string" },
+            gender: { type: "string", enum: ["Male", "Female", "Other"] },
+            role: { type: "string", enum: ["REVIEWER", "ADMIN"] },
           },
         },
       },

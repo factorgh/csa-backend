@@ -24,3 +24,18 @@ export const listAppsSchema = Joi.object({
   page: Joi.number().min(1).optional(),
   limit: Joi.number().min(1).max(100).optional()
 });
+
+// Superadmin: create reviewer/admin
+export const createStaffSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(8).required(),
+  confirmPassword: Joi.string().min(8).required(),
+  firstName: Joi.string().required(),
+  lastName: Joi.string().required(),
+  middleName: Joi.string().allow('', null).optional(),
+  phoneNumber: Joi.string().allow('', null).optional(),
+  telephoneNumber: Joi.string().allow('', null).optional(),
+  designation: Joi.string().allow('', null).optional(),
+  gender: Joi.string().valid('Male', 'Female', 'Other').optional(),
+  role: Joi.string().valid('REVIEWER', 'ADMIN').required()
+});

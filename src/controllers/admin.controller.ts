@@ -3,7 +3,8 @@ import type { IUser } from "../models/user.model";
 type ReqWithUser = Request & { user?: IUser };
 import * as AdminService from "../services/admin.service";
 import * as AppService from "../services/application.service";
-import { UserStatus } from "../types/types";
+import * as AuthService from "../services/auth.service";
+import { UserStatus, UserRole as UserRoleT } from "../types/types";
 
 console.log("all bugs fixed");
 
@@ -149,4 +150,37 @@ export async function exportApplicantsCsv(req: Request, res: Response) {
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", "attachment; filename=applicants.csv");
   res.status(200).send(csv);
+}
+
+// Superadmin: create reviewer/admin
+export async function createStaff(req: Request, res: Response): Promise<Response> {
+  const {
+    email,
+    password,
+    confirmPassword,
+    firstName,
+    lastName,
+    middleName,
+    phoneNumber,
+    telephoneNumber,
+    designation,
+    gender,
+    role,
+  } = req.body as any;
+
+  const result = await AuthService.register({
+    email,
+    password,
+    confirmPassword,
+    firstName,
+    lastName,
+    middleName,
+    phoneNumber,
+    telephoneNumber,
+    designation,
+    gender,
+    role: role as UserRoleT,
+  });
+
+  return res.status(201).json({ success: true, data: result });
 }
