@@ -12,8 +12,9 @@ export const providerSchema = Joi.object({
   physicalAddress: Joi.string().required(),
   postalAddress: Joi.string().optional(),
   website: Joi.string().uri().optional(),
-  businessDescription: Joi.string().required(),
+  companyDescription: Joi.string().required(),
   coreBusinessService: Joi.string().required(),
+  ghanaDigitalPostAddress: Joi.string().optional(),
 });
 
 export const professionalSchema = Joi.object({

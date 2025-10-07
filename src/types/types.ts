@@ -91,8 +91,9 @@ export interface IProviderData {
   physicalAddress: string;
   postalAddress?: string;
   website?: string;
-  businessDescription: string;
+  companyDescription: string;
   coreBusinessService: string;
+  ghanaDigitalPostAddress?: string;
 }
 
 // Professional Application Data
