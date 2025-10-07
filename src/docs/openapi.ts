@@ -1,5 +1,6 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import config from "../config";
+console.log("OPEN API");
 
 const version = "1.0.0";
 const base = ``;
