@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import type { IUser } from "../models/user.model";
+import User, { IUser } from "../models/user.model";
 import * as AuthService from "../services/auth.service";
+import { UserStatus } from "../types/runtime";
 
 type ReqWithUser = Request & { user?: IUser };
 
@@ -58,6 +59,18 @@ export async function registerWithApplication(req: Request, res: Response) {
  */
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
+
+  //TODO: bEFORE RUNNING USER TO LOGIN SYSTEM CHECK STATUS FIRST,ONLY ALLOW ACTIVE ACCOUNT TO LOGIN
+  const existing = await User.findOne({
+    email: String(email).toLowerCase(),
+  }).select("status");
+
+  if (existing && existing.status !== UserStatus.ACTIVE) {
+    throw Object.assign(new Error("Account is not set active"), {
+      status: 403,
+    });
+  }
+
   const result = await AuthService.login(email, password);
   res.json({ success: true, data: result });
 }

@@ -96,7 +96,7 @@ const userSchema = new Schema<IUser>(
     status: {
       type: String,
       enum: Object.values(UserStatus),
-      default: UserStatus.ACTIVE,
+      default: UserStatus.INACTIVE,
     } as any,
     lastLoginAt: {
       type: Date,
