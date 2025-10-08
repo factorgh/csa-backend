@@ -29,7 +29,6 @@ export const professionalSchema = Joi.object({
   certifications: Joi.array().items(Joi.string()).optional(),
   institutionName: Joi.string().optional(),
   institutionPhoneNumber: Joi.string().optional(),
-  institutionAddress: Joi.string().optional(),
   registeringAs: Joi.string().required(),
 });
 

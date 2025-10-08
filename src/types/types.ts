@@ -110,7 +110,6 @@ export interface IProfessionalData {
   certifications?: string[];
   institutionName?: string;
   institutionPhoneNumber?: string;
-  institutionAddress?: string;
   registeringAs: string;
 }
 
