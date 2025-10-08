@@ -29,7 +29,6 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// Health
 app.get("/api/health", (_req, res) => {
   res.json({ success: true, message: "OK" });
 });
