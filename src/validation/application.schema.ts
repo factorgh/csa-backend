@@ -30,6 +30,7 @@ export const professionalSchema = Joi.object({
   institutionName: Joi.string().optional(),
   institutionPhoneNumber: Joi.string().optional(),
   registeringAs: Joi.string().required(),
+  otherDetails: Joi.string().optional(),
 });
 
 export const establishmentSchema = Joi.object({

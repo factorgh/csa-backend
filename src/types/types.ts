@@ -111,6 +111,7 @@ export interface IProfessionalData {
   institutionName?: string;
   institutionPhoneNumber?: string;
   registeringAs: string;
+  otherDetails?: string;
 }
 
 // Establishment Application Data

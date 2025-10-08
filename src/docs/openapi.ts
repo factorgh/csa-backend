@@ -253,6 +253,9 @@ export const swaggerSpec = swaggerJSDoc({
             "idNumber",
             "physicalAddress",
             "registeringAs",
+            "institutionName",
+            "institutionPhoneNumber",
+            "otherDetails",
           ],
           properties: {
             professionalType: { type: "string", enum: ["LOCAL", "FOREIGN"] },
@@ -264,6 +267,7 @@ export const swaggerSpec = swaggerJSDoc({
             registeringAs: { type: "string" },
             institutionName: { type: "string" },
             institutionPhoneNumber: { type: "string" },
+            otherDetails: { type: "string" },
           },
         },
         EstablishmentApplication: {
@@ -279,6 +283,12 @@ export const swaggerSpec = swaggerJSDoc({
             "establishmentPhone",
             "establishmentEmail",
             "physicalAddress",
+            "postalAddress",
+            "ghanaPostAddress",
+            "website",
+            "numberOfAccreditedProfessionals",
+            "description",
+            "coreBusinessService",
           ],
           properties: {
             registeringAs: { type: "string" },
