@@ -66,9 +66,26 @@ export async function statsOverview() {
   return applicationStats();
 }
 
-export async function applicationStats(type?: string) {
+export async function applicationStats(filters?: { type?: string; status?: string; q?: string }) {
   const match: any = {};
-  if (type) match.type = type;
+  if (filters?.type) match.type = filters.type;
+  if (filters?.status) match.status = filters.status;
+  if (filters?.q) {
+    const rx = new RegExp(filters.q, "i");
+    match.$or = [
+      { "data.companyName": rx },
+      { "data.establishmentName": rx },
+      { "data.institutionName": rx },
+      { "data.registeringAs": rx },
+      { "data.description": rx },
+      { region: rx },
+    ];
+  }
+
+  // For type distribution, honor status/q but not the specific type filter,
+  // so consumers can see distribution across types under current filters
+  const matchForTypeDist = { ...match } as any;
+  if (matchForTypeDist.type) delete matchForTypeDist.type;
 
   const [statusAgg, typeAgg, total] = await Promise.all([
     Application.aggregate([
@@ -76,7 +93,7 @@ export async function applicationStats(type?: string) {
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]),
     Application.aggregate([
-      { $match: {} },
+      { $match: matchForTypeDist },
       { $group: { _id: "$type", count: { $sum: 1 } } },
     ]),
     Application.countDocuments(match),

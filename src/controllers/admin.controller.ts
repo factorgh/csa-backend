@@ -90,8 +90,8 @@ export async function deleteUser(req: Request, res: Response) {
 }
 
 export async function stats(req: Request, res: Response) {
-  const { type } = req.query as any;
-  const data = await AdminService.applicationStats(type);
+  const { type, status, q } = req.query as any;
+  const data = await AdminService.applicationStats({ type, status, q });
   return res.json({ success: true, data });
 }
 
