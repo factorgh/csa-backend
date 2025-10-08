@@ -536,6 +536,7 @@ export const swaggerSpec = swaggerJSDoc({
                           registeringAs: "Cybersecurity Professional",
                           institutionName: "Acme University",
                           institutionPhoneNumber: "+15550003333",
+                          otherDetails: "Other details",
                         },
                       },
                     },
