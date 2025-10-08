@@ -1001,6 +1001,20 @@ export const swaggerSpec = swaggerJSDoc({
               schema: { type: "string", enum: ["PROVIDER", "PROFESSIONAL", "ESTABLISHMENT"] },
               description: "Optional filter. When provided, 'status' counts are filtered by this type; 'types' counts remain overall distribution.",
             },
+            {
+              in: "query",
+              name: "status",
+              required: false,
+              schema: { type: "string", enum: ["PENDING_DOCUMENTS", "PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED"] },
+              description: "Optional filter by application status.",
+            },
+            {
+              in: "query",
+              name: "q",
+              required: false,
+              schema: { type: "string" },
+              description: "Optional keyword search across fields like company/institution/establishment name, registeringAs, description, region.",
+            },
           ],
           responses: {
             "200": {
