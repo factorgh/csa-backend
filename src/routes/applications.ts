@@ -4,19 +4,20 @@ import { authenticate } from '../middleware/auth.middleware';
 import { validateZodBody } from '../middleware/zod.middleware';
 import { providerSchema, professionalSchema, establishmentSchema } from '../validation/application.zod';
 import { upload } from '../middleware/upload.middleware';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const router = Router();
 
 router.use(authenticate);
 
-router.post('/provider', validateZodBody(providerSchema), (req, res, next) => AppController.createProvider(req, res).catch(next));
-router.post('/professional', validateZodBody(professionalSchema), (req, res, next) => AppController.createProfessional(req, res).catch(next));
-router.post('/establishment', validateZodBody(establishmentSchema), (req, res, next) => AppController.createEstablishment(req, res).catch(next));
+router.post('/provider', validateZodBody(providerSchema), asyncHandler((req, res) => AppController.createProvider(req, res)));
+router.post('/professional', validateZodBody(professionalSchema), asyncHandler((req, res) => AppController.createProfessional(req, res)));
+router.post('/establishment', validateZodBody(establishmentSchema), asyncHandler((req, res) => AppController.createEstablishment(req, res)));
 
-router.put('/:id', (req, res, next) => AppController.updateDraft(req, res).catch(next));
-router.get('/:id', (req, res, next) => AppController.getApplication(req, res).catch(next));
-router.get('/', (req, res, next) => AppController.listApplications(req, res).catch(next));
-router.post('/:id/submit', (req, res, next) => AppController.submit(req, res).catch(next));
-router.post('/:id/upload', upload.array('files', 10), (req, res, next) => AppController.uploadDocuments(req, res).catch(next));
+router.put('/:id', asyncHandler((req, res) => AppController.updateDraft(req, res)));
+router.get('/:id', asyncHandler((req, res) => AppController.getApplication(req, res)));
+router.get('/', asyncHandler((req, res) => AppController.listApplications(req, res)));
+router.post('/:id/submit', asyncHandler((req, res) => AppController.submit(req, res)));
+router.post('/:id/upload', upload.array('files', 10), asyncHandler((req, res) => AppController.uploadDocuments(req, res)));
 
 export default router;

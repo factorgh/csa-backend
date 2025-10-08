@@ -1,6 +1,7 @@
 import { Router } from "express";
 import * as AuthController from "../controllers/auth.controller";
 import { validateBody } from "../middleware/validation.middleware";
+import { asyncHandler } from "../utils/asyncHandler";
 import {
   registerSchema,
   loginSchema,
@@ -12,31 +13,41 @@ import { authenticate } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.post("/register", validateBody(registerSchema), (req, res, next) =>
-  AuthController.register(req, res).catch(next)
+router.post(
+  "/register",
+  validateBody(registerSchema),
+  asyncHandler((req, res) => AuthController.register(req, res))
 );
 router.post(
   "/register-with-application",
   validateBody(registerWithApplicationSchema),
-  (req, res, next) => AuthController.registerWithApplication(req, res).catch(next)
+  asyncHandler((req, res) => AuthController.registerWithApplication(req, res))
 );
-router.post("/login", validateBody(loginSchema), (req, res, next) =>
-  AuthController.login(req, res).catch(next)
+router.post(
+  "/login",
+  validateBody(loginSchema),
+  asyncHandler((req, res) => AuthController.login(req, res))
 );
 router.post(
   "/forgot-password",
   validateBody(forgotPasswordSchema),
-  (req, res, next) => AuthController.forgotPassword(req, res).catch(next)
+  asyncHandler((req, res) => AuthController.forgotPassword(req, res))
 );
 router.post(
   "/reset-password",
   validateBody(resetPasswordSchema),
-  (req, res, next) => AuthController.resetPassword(req, res).catch(next)
+  asyncHandler((req, res) => AuthController.resetPassword(req, res))
 );
 
-router.get("/me", authenticate, (req, res) => AuthController.me(req, res));
-router.put("/me", authenticate, (req, res) =>
-  AuthController.updateMe(req, res)
+router.get(
+  "/me",
+  authenticate,
+  asyncHandler((req, res) => AuthController.me(req as any, res))
+);
+router.put(
+  "/me",
+  authenticate,
+  asyncHandler((req, res) => AuthController.updateMe(req as any, res))
 );
 
 export default router;
