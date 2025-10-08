@@ -4,7 +4,7 @@ import * as DropdownController from '../controllers/dropdown.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { isReviewer, isAdmin, isSuperAdmin } from '../middleware/rbac.middleware';
 import { validateBody, validateQuery } from '../middleware/validation.middleware';
-import { reviewSchema, approveSchema, rejectSchema, requestDocsSchema, listAppsSchema, createStaffSchema } from '../validation/admin.schema';
+import { reviewSchema, approveSchema, rejectSchema, requestDocsSchema, listAppsSchema, createStaffSchema, updateUserStatusSchema } from '../validation/admin.schema';
 
 const router = Router();
 
@@ -20,7 +20,7 @@ router.post('/applications/:id/request-docs', isReviewer, validateBody(requestDo
 // Users
 router.get('/users', isAdmin, (req, res, next) => AdminController.listUsers(req, res).catch(next));
 router.get('/users/:id', isAdmin, (req, res, next) => AdminController.getUser(req, res).catch(next));
-router.patch('/users/:id', isAdmin, (req, res, next) => AdminController.updateUser(req, res).catch(next));
+router.patch('/users/:id', isAdmin, validateBody(updateUserStatusSchema), (req, res, next) => AdminController.updateUser(req, res).catch(next));
 router.delete('/users/:id', isAdmin, (req, res, next) => AdminController.deleteUser(req, res).catch(next));
 router.post('/users', isSuperAdmin, validateBody(createStaffSchema), (req, res, next) => AdminController.createStaff(req, res).catch(next));
 

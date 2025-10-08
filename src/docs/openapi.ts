@@ -32,6 +32,8 @@ export const swaggerSpec = swaggerJSDoc({
           scheme: "bearer",
           bearerFormat: "JWT",
         },
+      },
+      schemas: {
         Dropdown: {
           type: "object",
           properties: {
@@ -64,8 +66,6 @@ export const swaggerSpec = swaggerJSDoc({
             value: { type: "string" },
           },
         },
-      },
-      schemas: {
         User: {
           type: "object",
           properties: {
@@ -83,7 +83,7 @@ export const swaggerSpec = swaggerJSDoc({
             gender: { type: "string", enum: ["Male", "Female", "Other"] },
             status: {
               type: "string",
-              enum: ["ACTIVE", "SUSPENDED", "DELETED"],
+              enum: ["ACTIVE", "INACTIVE", "SUSPENDED", "DELETED"],
             },
             lastLoginAt: { type: "string", format: "date-time" },
             createdAt: { type: "string", format: "date-time" },
@@ -366,6 +366,17 @@ export const swaggerSpec = swaggerJSDoc({
             role: { type: "string", enum: ["REVIEWER", "ADMIN"] },
           },
         },
+        UpdateUserStatusRequest: {
+          type: "object",
+          required: ["status"],
+          properties: {
+            status: {
+              type: "string",
+              description: "New status to set for the user",
+              enum: ["ACTIVE", "INACTIVE", "SUSPENDED", "DELETED"],
+            },
+          },
+        },
       },
     },
     security: [{ bearerAuth: [] }],
@@ -413,6 +424,8 @@ export const swaggerSpec = swaggerJSDoc({
           },
         },
       },
+
+      
 
       // Auth
       [`${base}/auth/register`]: {
@@ -930,10 +943,35 @@ export const swaggerSpec = swaggerJSDoc({
         },
         patch: {
           tags: ["Admin"],
-          summary: "Suspend/Reactivate user",
+          summary: "Update user status",
           parameters: [{ in: "path", name: "id", required: true }],
-          requestBody: { required: true },
-          responses: { "200": { description: "OK" } },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdateUserStatusRequest" },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "OK",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean" },
+                      data: { $ref: "#/components/schemas/User" },
+                    },
+                  },
+                },
+              },
+            },
+            "404": { description: "User not found" },
+            "401": { description: "Unauthorized" },
+            "403": { description: "Forbidden" },
+          },
         },
         delete: {
           tags: ["Admin"],

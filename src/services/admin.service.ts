@@ -3,6 +3,9 @@ import User from "../models/user.model";
 import Audit from "../models/audit.model";
 import { paginate } from "../utils/paginate.util";
 import { UserStatus } from "../types/types";
+import { AuditAction } from "../types/runtime";
+import { logAudit } from "./audit.service";
+import type { AuditAction as AuditActionT } from "../types/types";
 
 export async function listApplications(filter: any, pagination: any) {
   return paginate(Application as any, filter, pagination);
@@ -22,16 +25,40 @@ export async function getApplicationWithAudit(id: string) {
 export async function updateUserStatus(userId: string, status: UserStatus) {
   const user = await User.findById(userId);
   if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+  const before = { status: user.status };
   user.status = status;
   await user.save();
+
+  let action: AuditActionT | undefined;
+  if (status === UserStatus.SUSPENDED) action = AuditAction.USER_SUSPENDED as AuditActionT;
+  else if (status === UserStatus.DELETED) action = AuditAction.USER_DELETED as AuditActionT;
+  else if (status === UserStatus.ACTIVE) action = AuditAction.USER_REACTIVATED as AuditActionT;
+
+  if (action) {
+    await logAudit({
+      action: action,
+      entityType: "User",
+      entityId: String(user._id),
+      before,
+      after: { status: user.status },
+    });
+  }
   return user;
 }
 
 export async function deleteUser(userId: string) {
   const user = await User.findById(userId);
   if (!user) throw Object.assign(new Error("User not found"), { status: 404 });
+  const before = { status: user.status };
   user.status = UserStatus.DELETED;
   await user.save();
+  await logAudit({
+    action: AuditAction.USER_DELETED as AuditActionT,
+    entityType: "User",
+    entityId: String(user._id),
+    before,
+    after: { status: user.status },
+  });
   return user;
 }
 

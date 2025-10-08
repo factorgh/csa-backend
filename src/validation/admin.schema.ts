@@ -39,3 +39,10 @@ export const createStaffSchema = Joi.object({
   gender: Joi.string().valid('Male', 'Female', 'Other').optional(),
   role: Joi.string().valid('REVIEWER', 'ADMIN').required()
 });
+
+// Update user status
+export const updateUserStatusSchema = Joi.object({
+  status: Joi.string()
+    .valid('ACTIVE', 'INACTIVE', 'SUSPENDED', 'DELETED')
+    .required(),
+});
