@@ -100,7 +100,6 @@ export interface IProviderData {
 export interface IProfessionalData {
   // Core fields (aligned with professionalSchema)
   professionalType: ProfessionalType;
-  designation: string;
   idType: string;
   idNumber: string;
   country?: string;

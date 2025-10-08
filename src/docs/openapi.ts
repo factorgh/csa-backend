@@ -256,7 +256,6 @@ export const swaggerSpec = swaggerJSDoc({
           ],
           properties: {
             professionalType: { type: "string", enum: ["LOCAL", "FOREIGN"] },
-            designation: { type: "string" },
             idType: { type: "string" },
             idNumber: { type: "string" },
             physicalAddress: { type: "string" },
@@ -425,8 +424,6 @@ export const swaggerSpec = swaggerJSDoc({
         },
       },
 
-      
-
       // Auth
       [`${base}/auth/register`]: {
         post: {
@@ -518,7 +515,6 @@ export const swaggerSpec = swaggerJSDoc({
                         type: "PROFESSIONAL",
                         data: {
                           professionalType: "LOCAL",
-                          designation: "Analyst",
                           idType: "Ghana Card",
                           idNumber: "GHA-000111222",
                           country: "Ghana",
@@ -949,7 +945,9 @@ export const swaggerSpec = swaggerJSDoc({
             required: true,
             content: {
               "application/json": {
-                schema: { $ref: "#/components/schemas/UpdateUserStatusRequest" },
+                schema: {
+                  $ref: "#/components/schemas/UpdateUserStatusRequest",
+                },
               },
             },
           },

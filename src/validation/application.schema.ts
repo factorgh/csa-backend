@@ -19,7 +19,6 @@ export const providerSchema = Joi.object({
 
 export const professionalSchema = Joi.object({
   professionalType: Joi.string().valid("LOCAL", "FOREIGN").required(),
-  designation: Joi.string().required(),
   idType: Joi.string().required(),
   idNumber: Joi.string().required(),
   country: Joi.string().optional(),
