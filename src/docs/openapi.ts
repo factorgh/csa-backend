@@ -992,8 +992,55 @@ export const swaggerSpec = swaggerJSDoc({
       [`${base}/admin/stats`]: {
         get: {
           tags: ["Admin"],
-          summary: "Stats overview",
-          responses: { "200": { description: "OK" } },
+          summary: "Application stats (counts by status and type)",
+          parameters: [
+            {
+              in: "query",
+              name: "type",
+              required: false,
+              schema: { type: "string", enum: ["PROVIDER", "PROFESSIONAL", "ESTABLISHMENT"] },
+              description: "Optional filter. When provided, 'status' counts are filtered by this type; 'types' counts remain overall distribution.",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "OK",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean" },
+                      data: {
+                        type: "object",
+                        properties: {
+                          total: { type: "integer" },
+                          status: {
+                            type: "object",
+                            properties: {
+                              PENDING_DOCUMENTS: { type: "integer" },
+                              PENDING: { type: "integer" },
+                              UNDER_REVIEW: { type: "integer" },
+                              APPROVED: { type: "integer" },
+                              REJECTED: { type: "integer" },
+                            },
+                          },
+                          types: {
+                            type: "object",
+                            properties: {
+                              PROVIDER: { type: "integer" },
+                              PROFESSIONAL: { type: "integer" },
+                              ESTABLISHMENT: { type: "integer" },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       [`${base}/admin/audit`]: {

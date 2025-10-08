@@ -89,8 +89,9 @@ export async function deleteUser(req: Request, res: Response) {
   return res.json({ success: true, data: user });
 }
 
-export async function stats(_req: Request, res: Response) {
-  const data = await AdminService.statsOverview();
+export async function stats(req: Request, res: Response) {
+  const { type } = req.query as any;
+  const data = await AdminService.applicationStats(type);
   return res.json({ success: true, data });
 }
 

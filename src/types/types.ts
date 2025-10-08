@@ -22,7 +22,6 @@ export enum ApplicationType {
 
 // Application Status
 export enum ApplicationStatus {
-  DRAFT = "DRAFT",
   PENDING_DOCUMENTS = "PENDING_DOCUMENTS",
   PENDING = "PENDING",
   UNDER_REVIEW = "UNDER_REVIEW",

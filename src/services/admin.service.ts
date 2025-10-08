@@ -63,13 +63,42 @@ export async function deleteUser(userId: string) {
 }
 
 export async function statsOverview() {
-  const [total, pending, approved, rejected] = await Promise.all([
-    Application.countDocuments({}),
-    Application.countDocuments({ status: "PENDING" }),
-    Application.countDocuments({ status: "APPROVED" }),
-    Application.countDocuments({ status: "REJECTED" }),
+  return applicationStats();
+}
+
+export async function applicationStats(type?: string) {
+  const match: any = {};
+  if (type) match.type = type;
+
+  const [statusAgg, typeAgg, total] = await Promise.all([
+    Application.aggregate([
+      { $match: match },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
+    Application.aggregate([
+      { $match: {} },
+      { $group: { _id: "$type", count: { $sum: 1 } } },
+    ]),
+    Application.countDocuments(match),
   ]);
-  return { total, pending, approved, rejected };
+
+  const statusCounts: Record<string, number> = {
+    PENDING_DOCUMENTS: 0,
+    PENDING: 0,
+    UNDER_REVIEW: 0,
+    APPROVED: 0,
+    REJECTED: 0,
+  };
+  for (const s of statusAgg) statusCounts[s._id] = s.count;
+
+  const typeCounts: Record<string, number> = {
+    PROVIDER: 0,
+    PROFESSIONAL: 0,
+    ESTABLISHMENT: 0,
+  };
+  for (const t of typeAgg) typeCounts[t._id] = t.count;
+
+  return { total, status: statusCounts, types: typeCounts };
 }
 
 // Users

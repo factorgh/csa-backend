@@ -15,14 +15,17 @@ export async function createDraft(params: {
   data: any;
   _session?: ClientSession;
 }): Promise<IApplication> {
-  const app = await Application.create([
-    {
-      applicantUserId: params.applicantUserId,
-      type: params.type,
-      status: ApplicationStatus.PENDING,
-      data: params.data,
-    } as any,
-  ], { session: params._session }).then((docs) => docs[0]);
+  const app = await Application.create(
+    [
+      {
+        applicantUserId: params.applicantUserId,
+        type: params.type,
+        status: ApplicationStatus.PENDING,
+        data: params.data,
+      } as any,
+    ],
+    { session: params._session }
+  ).then((docs) => docs[0]);
   await logAudit({
     action: AuditAction.APPLICATION_CREATED,
     actorUserId: params.applicantUserId,
@@ -44,11 +47,7 @@ export async function updateDraft(
   });
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
-  if (
-    ![ApplicationStatus.DRAFT, ApplicationStatus.PENDING_DOCUMENTS].includes(
-      app.status
-    )
-  ) {
+  if (![ApplicationStatus.PENDING].includes(app.status)) {
     throw Object.assign(
       new Error("Cannot modify application in current status"),
       { status: 400 }
