@@ -1,5 +1,6 @@
 import Joi from "joi";
 
+console.log("bug fix");
 export const reviewSchema = Joi.object({
   notes: Joi.string().allow("", null).optional(),
 });
