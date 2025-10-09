@@ -22,7 +22,24 @@ export async function listApplications(req: Request, res: Response) {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
   const result = await AdminService.listApplications(filter, { page, limit });
-  res.json({ success: true, data: result.data, pagination: result.pagination });
+  // Limit payload to the requested fields
+  const items = (result.data as any[]).map((a) => {
+    const user = a.applicantUserId || {};
+    const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+    let companyName: string | undefined;
+    if (a.type === "ESTABLISHMENT") companyName = a?.data?.establishmentName;
+    else if (a.type === "PROVIDER") companyName = a?.data?.companyName;
+    else if (a.type === "PROFESSIONAL") companyName = a?.data?.institutionName;
+
+    return {
+      id: a._id,
+      fullName: fullName || undefined,
+      status: a.status,
+      createdAt: a.createdAt,
+      companyName,
+    };
+  });
+  res.json({ success: true, data: items, pagination: result.pagination });
 }
 
 export async function getApplication(req: Request, res: Response) {
@@ -154,7 +171,10 @@ export async function exportApplicantsCsv(req: Request, res: Response) {
 }
 
 // Superadmin: create reviewer/admin
-export async function createStaff(req: Request, res: Response): Promise<Response> {
+export async function createStaff(
+  req: Request,
+  res: Response
+): Promise<Response> {
   const {
     email,
     password,

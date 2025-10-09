@@ -10,20 +10,28 @@ export async function paginate<T>(
     sort?: any;
     projection?: any;
     lean?: boolean;
+    populate?: any; // new: support populate
   } = {}
 ): Promise<IPaginationResult<T>> {
   const page = Math.max(1, options.page || 1);
   const limit = Math.min(100, Math.max(1, options.limit || 20));
   const skip = (page - 1) * limit;
-  const [data, total] = await Promise.all([
-    model
-      .find(filter, options.projection)
-      .sort(options.sort || { createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(!!options.lean),
-    model.countDocuments(filter),
-  ]);
+  const query = model
+    .find(filter, options.projection)
+    .sort(options.sort || { createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // Apply populate if provided
+  if (options.populate) {
+    (query as any).populate(options.populate);
+  }
+
+  if (options.lean) {
+    (query as any).lean(true);
+  }
+
+  const [data, total] = await Promise.all([query, model.countDocuments(filter)]);
 
   return {
     data: data as any,

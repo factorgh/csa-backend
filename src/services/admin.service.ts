@@ -8,7 +8,13 @@ import { logAudit } from "./audit.service";
 import type { AuditAction as AuditActionT } from "../types/types";
 
 export async function listApplications(filter: any, pagination: any) {
-  return paginate(Application as any, filter, pagination);
+  return paginate(Application as any, filter, {
+    ...pagination,
+    populate: {
+      path: "applicantUserId",
+      select: "firstName lastName email role status",
+    },
+  });
 }
 
 export async function getApplicationWithAudit(id: string) {
