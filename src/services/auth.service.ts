@@ -58,7 +58,7 @@ export async function register(
         role: data.role || UserRole.APPLICANT,
         designation: data.designation,
         gender: data.gender,
-        status: UserStatus.ACTIVE,
+        status: UserStatus.INACTIVE,
       },
     ],
     { session: options?.session }
