@@ -26,17 +26,17 @@ function signToken(payload: IJwtPayload) {
  */
 export async function register(
   data: {
-  email: string;
-  password: string;
-  confirmPassword?: string;
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  phoneNumber?: string;
-  telephoneNumber?: string;
-  role?: UserRoleT;
-  designation?: string;
-  gender?: string;
+    email: string;
+    password: string;
+    confirmPassword?: string;
+    firstName: string;
+    lastName: string;
+    middleName?: string;
+    phoneNumber?: string;
+    telephoneNumber?: string;
+    role?: UserRoleT;
+    designation?: string;
+    gender?: string;
   },
   options?: { session?: ClientSession }
 ) {
@@ -44,22 +44,25 @@ export async function register(
   if (exists)
     throw Object.assign(new Error("Email already in use"), { status: 409 });
 
-  const user = await User.create([
-    {
-    email: data.email,
-    password: data.password,
-    confirmPassword: data.confirmPassword,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    middleName: data.middleName,
-    phoneNumber: data.phoneNumber,
-    telephoneNumber: data.telephoneNumber,
-    role: data.role || UserRole.APPLICANT,
-    designation: data.designation,
-    gender: data.gender,
-    status: UserStatus.ACTIVE,
-    },
-  ], { session: options?.session }).then((docs) => docs[0]);
+  const user = await User.create(
+    [
+      {
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        middleName: data.middleName,
+        phoneNumber: data.phoneNumber,
+        telephoneNumber: data.telephoneNumber,
+        role: data.role || UserRole.APPLICANT,
+        designation: data.designation,
+        gender: data.gender,
+        status: UserStatus.ACTIVE,
+      },
+    ],
+    { session: options?.session }
+  ).then((docs) => docs[0]);
 
   await logAudit({
     action: AuditAction.USER_REGISTERED as AuditActionT,
