@@ -21,7 +21,6 @@ export async function getApplicationWithAudit(id: string) {
   const app = await Application.findById(id)
     .populate({
       path: "applicantUserId",
-      select: "firstName lastName email role status",
     })
     .populate({
       path: "decisionBy",
@@ -44,9 +43,12 @@ export async function updateUserStatus(userId: string, status: UserStatus) {
   await user.save();
 
   let action: AuditActionT | undefined;
-  if (status === UserStatus.SUSPENDED) action = AuditAction.USER_SUSPENDED as AuditActionT;
-  else if (status === UserStatus.DELETED) action = AuditAction.USER_DELETED as AuditActionT;
-  else if (status === UserStatus.ACTIVE) action = AuditAction.USER_REACTIVATED as AuditActionT;
+  if (status === UserStatus.SUSPENDED)
+    action = AuditAction.USER_SUSPENDED as AuditActionT;
+  else if (status === UserStatus.DELETED)
+    action = AuditAction.USER_DELETED as AuditActionT;
+  else if (status === UserStatus.ACTIVE)
+    action = AuditAction.USER_REACTIVATED as AuditActionT;
 
   if (action) {
     await logAudit({
@@ -80,7 +82,11 @@ export async function statsOverview() {
   return applicationStats();
 }
 
-export async function applicationStats(filters?: { type?: string; status?: string; q?: string }) {
+export async function applicationStats(filters?: {
+  type?: string;
+  status?: string;
+  q?: string;
+}) {
   const match: any = {};
   if (filters?.type) match.type = filters.type;
   if (filters?.status) match.status = filters.status;
