@@ -108,7 +108,14 @@ export async function listOwn(
   const skip = (page - 1) * limit;
 
   const [data, total] = await Promise.all([
-    Application.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Application.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: "applicantUserId",
+        select: "firstName lastName email role status",
+      }),
     Application.countDocuments(filter),
   ]);
 
@@ -122,6 +129,7 @@ export async function getById(
   appId: string,
   userId: string
 ): Promise<IApplication> {
+  console.log("getById", appId, userId);
   const app = await Application.findOne({
     _id: appId,
     applicantUserId: userId,

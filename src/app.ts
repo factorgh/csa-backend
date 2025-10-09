@@ -29,6 +29,8 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
+// Clear cache
+app.set("etag", false);
 app.get("/api/health", (_req, res) => {
   res.json({ success: true, message: "OK" });
 });

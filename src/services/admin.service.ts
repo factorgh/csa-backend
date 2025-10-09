@@ -18,7 +18,15 @@ export async function listApplications(filter: any, pagination: any) {
 }
 
 export async function getApplicationWithAudit(id: string) {
-  const app = await Application.findById(id);
+  const app = await Application.findById(id)
+    .populate({
+      path: "applicantUserId",
+      select: "firstName lastName email role status",
+    })
+    .populate({
+      path: "decisionBy",
+      select: "firstName lastName email role status",
+    });
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
   const audit = await Audit.find({

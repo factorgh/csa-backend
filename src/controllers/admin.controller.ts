@@ -71,7 +71,11 @@ export async function listApplications(req: Request, res: Response) {
 
 export async function getApplication(req: Request, res: Response) {
   const result = await AdminService.getApplicationWithAudit(req.params.id);
-  res.json({ success: true, data: result });
+  const appDoc = result.app as any;
+  const user = appDoc?.applicantUserId;
+  const app = appDoc?.toObject ? appDoc.toObject() : appDoc;
+  if (app && app.applicantUserId) delete app.applicantUserId;
+  res.json({ success: true, data: { user, app } });
 }
 
 export async function setUnderReview(req: ReqWithUser, res: Response) {
