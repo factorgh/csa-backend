@@ -120,7 +120,6 @@ export async function applicationStats(filters?: {
   ]);
 
   const statusCounts: Record<string, number> = {
-    PENDING_DOCUMENTS: 0,
     PENDING: 0,
     UNDER_REVIEW: 0,
     APPROVED: 0,

@@ -151,10 +151,10 @@ export async function approve(
   const app = await Application.findById(appId);
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
-  if (app.status !== ApplicationStatus.UNDER_REVIEW)
-    throw Object.assign(new Error("Application must be under review"), {
-      status: 400,
-    });
+  // if (app.status !== ApplicationStatus.UNDER_REVIEW)
+  //   throw Object.assign(new Error("Application must be under review"), {
+  //     status: 400,
+  //   });
 
   const licenseNumber = generateLicenseNumber(app.type);
   const verificationHash = generateVerificationHash(licenseNumber);
@@ -276,11 +276,7 @@ export async function setUnderReview(
   return app;
 }
 
-export async function reject(
-  appId: string,
-  reviewerId: string,
-  comment: string
-) {
+export async function reject(appId: string, reviewerId: string) {
   const app = await Application.findById(appId);
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
@@ -291,7 +287,7 @@ export async function reject(
   app.status = ApplicationStatus.REJECTED;
   app.decidedAt = new Date();
   (app as any).decisionBy = reviewerId as any;
-  (app as any).decisionComment = comment;
+
   await app.save();
   await logAudit({
     action: AuditAction.APPLICATION_REJECTED,
