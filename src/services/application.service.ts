@@ -257,11 +257,7 @@ export async function setUnderReview(
   const app = await Application.findById(appId);
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
-  if (![ApplicationStatus.PENDING].includes(app.status)) {
-    throw Object.assign(new Error("Application not in a reviewable state"), {
-      status: 400,
-    });
-  }
+
   (app as any).reviewerNotes = notes;
   app.status = ApplicationStatus.UNDER_REVIEW;
   await app.save();
