@@ -191,39 +191,58 @@ export async function approve(
     });
   }
 
-  const license = await License.create({
-    applicationId: app._id,
-    licenseNumber,
-    type: app.type,
-    issuedAt: new Date(),
-    expiresAt: options?.expiresAt,
-    status: "ACTIVE",
-    verificationHash,
-    holderName,
-    holderEmail,
-    organizationName,
-  } as any);
+  // Idempotency: if a license already exists for this application, reuse it
+  let license = await License.findOne({ applicationId: app._id });
+  let createdNew = false;
+  if (!license) {
+    try {
+      license = await License.create({
+        applicationId: app._id,
+        licenseNumber,
+        type: app.type,
+        issuedAt: new Date(),
+        expiresAt: options?.expiresAt,
+        status: "ACTIVE",
+        verificationHash,
+        holderName,
+        holderEmail,
+        organizationName,
+      } as any);
+      createdNew = true;
+    } catch (e: any) {
+      // Handle duplicate creation due to race/retry
+      if (e?.code === 11000) {
+        license = await License.findOne({ applicationId: app._id });
+      } else {
+        throw e;
+      }
+    }
+  }
 
+  // Ensure application reflects the decision and is linked to the license
   app.status = ApplicationStatus.APPROVED;
   app.decidedAt = new Date();
   (app as any).decisionBy = reviewerId as any;
-  (app as any).licenseId = license._id as any;
+  (app as any).licenseId = (license as any)!._id as any;
   await app.save();
 
-  await logAudit({
-    action: AuditAction.APPLICATION_APPROVED,
-    actorUserId: reviewerId,
-    entityType: "Application",
-    entityId: String(app._id),
-    after: app,
-  });
-  await logAudit({
-    action: AuditAction.LICENSE_GENERATED,
-    actorUserId: reviewerId,
-    entityType: "License",
-    entityId: String(license._id),
-    after: license,
-  });
+  // Only log creation events when a new license was created
+  if (createdNew) {
+    await logAudit({
+      action: AuditAction.APPLICATION_APPROVED,
+      actorUserId: reviewerId,
+      entityType: "Application",
+      entityId: String(app._id),
+      after: app,
+    });
+    await logAudit({
+      action: AuditAction.LICENSE_GENERATED,
+      actorUserId: reviewerId,
+      entityType: "License",
+      entityId: String((license as any)!._id),
+      after: license,
+    });
+  }
 
   // Also activate the applicant user upon approval
   try {
