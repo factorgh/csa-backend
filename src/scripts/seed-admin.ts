@@ -38,6 +38,7 @@ async function seed() {
     const adminEmail = "admin+seed@csa.gov";
     const adminPassword = "Admin@123456";
     let admin = await User.findOne({ email: adminEmail.toLowerCase() });
+    console.log("admin", admin);
     if (!admin) {
       admin = await User.create({
         email: adminEmail,
@@ -48,6 +49,7 @@ async function seed() {
         role: UserRole.ADMIN,
         status: UserStatus.ACTIVE,
       } as any);
+      await admin.save();
       // eslint-disable-next-line no-console
       console.log(`Created ADMIN: ${adminEmail}`);
     } else {
