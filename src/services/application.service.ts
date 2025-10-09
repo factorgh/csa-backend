@@ -1,4 +1,5 @@
 import Application, { IApplication } from "../models/application.model";
+import User from "../models/user.model";
 import type { ClientSession } from "mongoose";
 import License from "../models/license.model";
 import { ApplicationStatus, ApplicationType } from "../types/types";
@@ -7,7 +8,7 @@ import {
   generateVerificationHash,
 } from "../utils/license.util";
 import { logAudit } from "./audit.service";
-import { AuditAction } from "../types/types";
+import { AuditAction, UserStatus } from "../types/types";
 
 export async function createDraft(params: {
   applicantUserId: string;
@@ -224,6 +225,27 @@ export async function approve(
     entityId: String(license._id),
     after: license,
   });
+
+  // Also activate the applicant user upon approval
+  try {
+    const user = await User.findById(app.applicantUserId);
+    if (user && user.status !== UserStatus.ACTIVE) {
+      const before = { status: user.status } as any;
+      user.status = UserStatus.ACTIVE as any;
+      await user.save();
+      await logAudit({
+        action: AuditAction.USER_REACTIVATED,
+        actorUserId: reviewerId,
+        entityType: "User",
+        entityId: String(user._id),
+        before,
+        after: { status: user.status },
+      });
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to activate user on approval", e);
+  }
 
   return { app, license };
 }
