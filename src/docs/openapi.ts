@@ -898,14 +898,7 @@ export const swaggerSpec = swaggerJSDoc({
           tags: ["Admin"],
           summary: "Reject application",
           parameters: [{ in: "path", name: "id", required: true }],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/RejectRequest" },
-              },
-            },
-          },
+
           responses: { "200": { description: "OK" } },
         },
       },
