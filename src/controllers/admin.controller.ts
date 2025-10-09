@@ -37,6 +37,7 @@ export async function listApplications(req: Request, res: Response) {
       status: a.status,
       createdAt: a.createdAt,
       companyName,
+      type: a.type,
     };
   });
   res.json({ success: true, data: items, pagination: result.pagination });
