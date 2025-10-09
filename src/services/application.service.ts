@@ -77,11 +77,7 @@ export async function submit(
   });
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
-  if (
-    ![ApplicationStatus.PENDING, ApplicationStatus.PENDING_DOCUMENTS].includes(
-      app.status
-    )
-  ) {
+  if (![ApplicationStatus.PENDING].includes(app.status)) {
     throw Object.assign(
       new Error("Cannot submit application in current status"),
       { status: 400 }
@@ -229,11 +225,7 @@ export async function setUnderReview(
   const app = await Application.findById(appId);
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
-  if (
-    ![ApplicationStatus.PENDING, ApplicationStatus.PENDING_DOCUMENTS].includes(
-      app.status
-    )
-  ) {
+  if (![ApplicationStatus.PENDING].includes(app.status)) {
     throw Object.assign(new Error("Application not in a reviewable state"), {
       status: 400,
     });
@@ -286,7 +278,7 @@ export async function requestDocuments(
   const app = await Application.findById(appId);
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
-  app.status = ApplicationStatus.PENDING_DOCUMENTS;
+  app.status;
   (app as any).documentsRequired = docs;
   await app.save();
   await logAudit({
