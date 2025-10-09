@@ -38,8 +38,33 @@ export const errorHandler = (
       ? "Internal Server Error"
       : err?.message || "Internal Server Error";
 
-  const clientDetails =
-    inProduction && !isOperational ? undefined : err?.details;
+  // Normalize details for the client
+  let clientDetails: any;
+  if (inProduction) {
+    // In production, expose only validation messages (not full details objects)
+    if (Array.isArray(err?.details)) {
+      const msgs = err.details
+        .map((d: any) =>
+          typeof d === "string"
+            ? d
+            : typeof d?.message === "string"
+            ? d.message
+            : undefined
+        )
+        .filter(Boolean);
+      if (msgs.length === 1) clientDetails = msgs[0];
+      else if (msgs.length > 1) clientDetails = msgs.join(", ");
+    } else if (typeof err?.details?.message === "string") {
+      clientDetails = err.details.message;
+    } else if (typeof err?.details === "string") {
+      clientDetails = err.details;
+    } else {
+      clientDetails = undefined;
+    }
+  } else {
+    // Non-production: include full details for easier debugging
+    clientDetails = err?.details;
+  }
 
   const clientCode = inProduction && !isOperational ? undefined : err?.code;
 
