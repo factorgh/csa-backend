@@ -20,7 +20,7 @@ export const swaggerSpec = swaggerJSDoc({
         description: "Local",
       },
       {
-        url: `https://csa-backend-utuw.onrender.com/api/${config.apiVersion}`,
+        url: `https://maxaziz.adroit360.com/api/${config.apiVersion}`,
         description: "Production",
       },
     ],
@@ -998,14 +998,27 @@ export const swaggerSpec = swaggerJSDoc({
               in: "query",
               name: "type",
               required: false,
-              schema: { type: "string", enum: ["PROVIDER", "PROFESSIONAL", "ESTABLISHMENT"] },
-              description: "Optional filter. When provided, 'status' counts are filtered by this type; 'types' counts remain overall distribution.",
+              schema: {
+                type: "string",
+                enum: ["PROVIDER", "PROFESSIONAL", "ESTABLISHMENT"],
+              },
+              description:
+                "Optional filter. When provided, 'status' counts are filtered by this type; 'types' counts remain overall distribution.",
             },
             {
               in: "query",
               name: "status",
               required: false,
-              schema: { type: "string", enum: ["PENDING_DOCUMENTS", "PENDING", "UNDER_REVIEW", "APPROVED", "REJECTED"] },
+              schema: {
+                type: "string",
+                enum: [
+                  "PENDING_DOCUMENTS",
+                  "PENDING",
+                  "UNDER_REVIEW",
+                  "APPROVED",
+                  "REJECTED",
+                ],
+              },
               description: "Optional filter by application status.",
             },
             {
@@ -1013,7 +1026,8 @@ export const swaggerSpec = swaggerJSDoc({
               name: "q",
               required: false,
               schema: { type: "string" },
-              description: "Optional keyword search across fields like company/institution/establishment name, registeringAs, description, region.",
+              description:
+                "Optional keyword search across fields like company/institution/establishment name, registeringAs, description, region.",
             },
           ],
           responses: {
