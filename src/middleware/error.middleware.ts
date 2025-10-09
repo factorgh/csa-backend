@@ -33,7 +33,7 @@ export const errorHandler = (
   const inProduction = process.env.NODE_ENV === "production";
 
   // Determine what to expose to the client
-  const clientMessage =
+  let clientMessage =
     inProduction && !isOperational
       ? "Internal Server Error"
       : err?.message || "Internal Server Error";
@@ -52,12 +52,18 @@ export const errorHandler = (
             : undefined
         )
         .filter(Boolean);
-      if (msgs.length === 1) clientDetails = msgs[0];
-      else if (msgs.length > 1) clientDetails = msgs.join(", ");
+      if (msgs.length >= 1) {
+        // Put messages into the top-level message field, not details
+        clientMessage = msgs.join(", ");
+        clientDetails = undefined;
+      }
     } else if (typeof err?.details?.message === "string") {
-      clientDetails = err.details.message;
+      // Single validation message: also surface on top-level message
+      clientMessage = err.details.message;
+      clientDetails = undefined;
     } else if (typeof err?.details === "string") {
-      clientDetails = err.details;
+      clientMessage = err.details;
+      clientDetails = undefined;
     } else {
       clientDetails = undefined;
     }
