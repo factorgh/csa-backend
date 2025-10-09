@@ -125,6 +125,9 @@ export async function getById(
   const app = await Application.findOne({
     _id: appId,
     applicantUserId: userId,
+  }).populate({
+    path: "applicantUserId",
+    select: "firstName lastName email role status",
   });
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
