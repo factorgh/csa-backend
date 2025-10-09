@@ -159,37 +159,79 @@ export async function approve(
   const licenseNumber = generateLicenseNumber(app.type);
   const verificationHash = generateVerificationHash(licenseNumber);
 
-  // Derive names/emails based on new Zod structures
+  // Fetch applicant for fallback name/email
+  const applicant = await User.findById(app.applicantUserId).lean();
+
+  // Derive names/emails based on new Zod structures with robust fallbacks
   let holderName = "Holder";
   let holderEmail = "";
   let organizationName: string | undefined = undefined;
+
+  const validEmail = (v: any) =>
+    typeof v === "string" && /\S+@\S+\.\S+/.test(v.trim());
+  const firstNonEmpty = (...vals: any[]) => vals.find((v) => !!v && String(v).trim().length > 0);
 
   if (app.type === ApplicationType.PROVIDER) {
     const d: any = app.data;
     const acc = d.account || {};
     const reg = d.registration || {};
     holderName =
-      [acc.firstname, acc.middleName, acc.lastname].filter(Boolean).join(" ") ||
-      "Holder";
-    holderEmail = acc.email || reg.emailAddress || "";
+      [
+        firstNonEmpty(acc.firstname, applicant?.firstName),
+        firstNonEmpty(acc.middleName, ""),
+        firstNonEmpty(acc.lastname, applicant?.lastName),
+      ]
+        .filter(Boolean)
+        .join(" ") || "Holder";
+    holderEmail =
+      firstNonEmpty(
+        validEmail(acc.email) ? acc.email : undefined,
+        validEmail(reg.emailAddress) ? reg.emailAddress : undefined,
+        validEmail(applicant?.email) ? applicant?.email : undefined
+      ) || "";
     organizationName = reg.nameOfInstitution;
   } else if (app.type === ApplicationType.PROFESSIONAL) {
     const d: any = app.data;
     const acc = d.account || {};
     holderName =
-      [acc.firstname, acc.middleName, acc.lastname].filter(Boolean).join(" ") ||
-      "Holder";
-    holderEmail = acc.email || "";
+      [
+        firstNonEmpty(acc.firstname, applicant?.firstName),
+        firstNonEmpty(acc.middleName, ""),
+        firstNonEmpty(acc.lastname, applicant?.lastName),
+      ]
+        .filter(Boolean)
+        .join(" ") || "Holder";
+    holderEmail =
+      firstNonEmpty(
+        validEmail(acc.email) ? acc.email : undefined,
+        validEmail(applicant?.email) ? applicant?.email : undefined
+      ) || "";
     organizationName = undefined;
   } else if (app.type === ApplicationType.ESTABLISHMENT) {
     const d: any = app.data;
     const acc = d.account || {};
     const est = d.establishment || {};
     holderName =
-      [acc.firstname, acc.middleName, acc.lastname].filter(Boolean).join(" ") ||
-      "Holder";
-    holderEmail = acc.email || est.emailAddress || "";
+      [
+        firstNonEmpty(acc.firstname, applicant?.firstName),
+        firstNonEmpty(acc.middleName, ""),
+        firstNonEmpty(acc.lastname, applicant?.lastName),
+      ]
+        .filter(Boolean)
+        .join(" ") || "Holder";
+    holderEmail =
+      firstNonEmpty(
+        validEmail(acc.email) ? acc.email : undefined,
+        validEmail(est.emailAddress) ? est.emailAddress : undefined,
+        validEmail(applicant?.email) ? applicant?.email : undefined
+      ) || "";
     organizationName = est.name;
+  }
+
+  if (!validEmail(holderEmail)) {
+    throw Object.assign(new Error("Valid holder email not found for license"), {
+      status: 400,
+    });
   }
 
   const license = await License.create({
