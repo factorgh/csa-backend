@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import type { IUser } from "../models/user.model";
+import User from "../models/user.model";
 type ReqWithUser = Request & { user?: IUser };
 import * as AdminService from "../services/admin.service";
 import * as AppService from "../services/application.service";
@@ -12,6 +13,31 @@ export async function listApplications(req: Request, res: Response) {
   const filter: any = {};
   if (req.query.type) filter.type = req.query.type;
   if (req.query.status) filter.status = req.query.status;
+  // Search by companyName (varies by type) and user name using a generic `q` param
+  const q = (req.query.q || req.query.companyName || req.query.name) as
+    | string
+    | undefined;
+  if (q && q.trim()) {
+    const rx = new RegExp(q.trim(), "i");
+    const or: any[] = [
+      { "data.companyName": rx },
+      { "data.establishmentName": rx },
+      { "data.institutionName": rx },
+    ];
+    // Find users by first or last name and include their IDs
+    const users = await User.find(
+      { $or: [{ firstName: rx }, { lastName: rx }] },
+      { _id: 1 }
+    )
+      .limit(200)
+      .lean();
+    const userIds = users.map((u: any) => u._id);
+    if (userIds.length > 0) {
+      or.push({ applicantUserId: { $in: userIds } });
+    }
+    filter.$or = or;
+  }
+
   if (req.query.startDate || req.query.endDate) {
     filter.createdAt = {} as any;
     if (req.query.startDate)
