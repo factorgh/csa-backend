@@ -46,7 +46,7 @@ export const establishmentSchema = Joi.object({
   physicalAddress: Joi.string().required(),
   postalAddress: Joi.string().optional(),
   ghanaPostAddress: Joi.string().optional(),
-  website: Joi.string().uri().optional(),
+  website: Joi.string().optional(),
   numberOfAccreditedProfessionals: Joi.number().min(0).optional(),
   description: Joi.string().optional(),
   coreBusinessService: Joi.string().optional(),
