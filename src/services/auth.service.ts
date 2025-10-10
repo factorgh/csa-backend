@@ -171,6 +171,15 @@ export async function login(email: string, password: string) {
     role: user.role,
   });
 
+  // Optional: notify user of login
+  try {
+    await sendEmail(
+      user.email,
+      "Login Notification",
+      `<p>Your account logged in at ${new Date().toLocaleString()}.</p>`
+    );
+  } catch {}
+
   return { user, token };
 }
 

@@ -100,7 +100,12 @@ export async function approve(req: ReqWithUser, res: Response) {
 }
 
 export async function reject(req: ReqWithUser, res: Response) {
-  const app = await AppService.reject(req.params.id, String(req.user!._id));
+  const { comment } = req.body;
+  const app = await AppService.reject(
+    req.params.id,
+    String(req.user!._id),
+    comment
+  );
   res.json({ success: true, data: app });
 }
 

@@ -343,7 +343,11 @@ export async function setUnderReview(
   return app;
 }
 
-export async function reject(appId: string, reviewerId: string) {
+export async function reject(
+  appId: string,
+  reviewerId: string,
+  comment?: string
+) {
   const app = await Application.findById(appId);
   if (!app)
     throw Object.assign(new Error("Application not found"), { status: 404 });
@@ -354,7 +358,7 @@ export async function reject(appId: string, reviewerId: string) {
   app.status = ApplicationStatus.REJECTED;
   app.decidedAt = new Date();
   (app as any).decisionBy = reviewerId as any;
-
+  (app as any).reviewerNotes = comment;
   await app.save();
   await logAudit({
     action: AuditAction.APPLICATION_REJECTED,
@@ -370,7 +374,7 @@ export async function reject(appId: string, reviewerId: string) {
       await sendEmail(
         user.email,
         "Application Rejected",
-        `<p>Your application (${app._id}) has been rejected.</p>`
+        `<p>Your application (${app._id}) has been rejected.</p><p>${comment}</p>`
       );
     }
   } catch {}
