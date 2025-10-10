@@ -3,6 +3,8 @@ import authRoutes from "./auth";
 import applicationRoutes from "./applications";
 import adminRoutes from "./admin";
 import dropdownRoutes from "./dropdowns";
+import licensesRoutes from "./licenses";
+import supportRoutes from "./support";
 
 const router = Router();
 
@@ -10,6 +12,8 @@ router.use("/auth", authRoutes);
 router.use("/applications", applicationRoutes);
 router.use("/admin", adminRoutes);
 router.use("/dropdowns", dropdownRoutes);
+router.use("/licenses", licensesRoutes);
+router.use("/support", supportRoutes);
 
 // Utilities
 router.get("/license/:licenseNumber", async (req, res) => {

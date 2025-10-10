@@ -111,6 +111,55 @@ export const swaggerSpec = swaggerJSDoc({
             updatedAt: { type: "string", format: "date-time" },
           },
         },
+        RenewalRequest: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            licenseId: { type: "string" },
+            userId: { type: "string" },
+            status: { type: "string", enum: ["PENDING", "APPROVED", "REJECTED"] },
+            notes: { type: "string" },
+            requestedAt: { type: "string", format: "date-time" },
+            decidedAt: { type: "string", format: "date-time" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
+        UpdateLicenseStatusRequest: {
+          type: "object",
+          required: ["status"],
+          properties: {
+            status: {
+              type: "string",
+              enum: ["ACTIVE", "EXPIRED", "REVOKED", "SUSPENDED"],
+            },
+            notes: { type: "string" },
+          },
+        },
+        RenewalApproveRequest: {
+          type: "object",
+          required: ["newExpiry"],
+          properties: {
+            newExpiry: { type: "string", format: "date-time" },
+            notes: { type: "string" },
+          },
+        },
+        RenewalRejectRequest: {
+          type: "object",
+          properties: {
+            notes: { type: "string" },
+          },
+        },
+        SupportContactRequest: {
+          type: "object",
+          required: ["message"],
+          properties: {
+            name: { type: "string" },
+            email: { type: "string", format: "email" },
+            subject: { type: "string" },
+            message: { type: "string" },
+          },
+        },
         ApiResponse: {
           type: "object",
           properties: {
@@ -1083,6 +1132,145 @@ export const swaggerSpec = swaggerJSDoc({
             },
             { in: "query", name: "limit", schema: { type: "integer" } },
           ],
+          responses: { "200": { description: "OK" } },
+        },
+      },
+
+      // Admin Licenses
+      [`${base}/admin/licenses`]: {
+        get: {
+          tags: ["Admin", "Licenses"],
+          summary: "List licenses",
+          parameters: [
+            { in: "query", name: "status", schema: { type: "string" } },
+            { in: "query", name: "type", schema: { type: "string" } },
+            { in: "query", name: "q", schema: { type: "string" } },
+            { in: "query", name: "expiresBefore", schema: { type: "string", format: "date-time" } },
+            { in: "query", name: "expiresAfter", schema: { type: "string", format: "date-time" } },
+            { in: "query", name: "page", schema: { type: "integer" } },
+            { in: "query", name: "limit", schema: { type: "integer" } },
+          ],
+          responses: {
+            "200": {
+              description: "OK",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean" },
+                      data: { type: "array", items: { $ref: "#/components/schemas/License" } },
+                      pagination: {
+                        type: "object",
+                        properties: {
+                          page: { type: "integer" },
+                          limit: { type: "integer" },
+                          total: { type: "integer" },
+                          pages: { type: "integer" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      [`${base}/admin/licenses/{id}/status`]: {
+        patch: {
+          tags: ["Admin", "Licenses"],
+          summary: "Update license status",
+          parameters: [{ in: "path", name: "id", required: true }],
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: { $ref: "#/components/schemas/UpdateLicenseStatusRequest" } } },
+          },
+          responses: { "200": { description: "OK" } },
+        },
+      },
+      [`${base}/admin/licenses/expire-due`]: {
+        post: {
+          tags: ["Admin", "Licenses"],
+          summary: "Mark due licenses as expired",
+          responses: { "200": { description: "OK" } },
+        },
+      },
+
+      // Admin Renewals
+      [`${base}/admin/renewals`]: {
+        get: {
+          tags: ["Admin", "Renewals"],
+          summary: "List renewal requests",
+          parameters: [
+            { in: "query", name: "status", schema: { type: "string" } },
+            { in: "query", name: "licenseId", schema: { type: "string" } },
+            { in: "query", name: "userId", schema: { type: "string" } },
+            { in: "query", name: "page", schema: { type: "integer" } },
+            { in: "query", name: "limit", schema: { type: "integer" } },
+          ],
+          responses: { "200": { description: "OK" } },
+        },
+      },
+      [`${base}/admin/renewals/{id}/approve`]: {
+        post: {
+          tags: ["Admin", "Renewals"],
+          summary: "Approve renewal",
+          parameters: [{ in: "path", name: "id", required: true }],
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: { $ref: "#/components/schemas/RenewalApproveRequest" } } },
+          },
+          responses: { "200": { description: "OK" } },
+        },
+      },
+      [`${base}/admin/renewals/{id}/reject`]: {
+        post: {
+          tags: ["Admin", "Renewals"],
+          summary: "Reject renewal",
+          parameters: [{ in: "path", name: "id", required: true }],
+          requestBody: {
+            required: false,
+            content: { "application/json": { schema: { $ref: "#/components/schemas/RenewalRejectRequest" } } },
+          },
+          responses: { "200": { description: "OK" } },
+        },
+      },
+
+      // User Licenses
+      [`${base}/licenses/me`]: {
+        get: {
+          tags: ["Licenses"],
+          summary: "List current user's licenses",
+          parameters: [
+            { in: "query", name: "page", schema: { type: "integer" } },
+            { in: "query", name: "limit", schema: { type: "integer" } },
+          ],
+          responses: { "200": { description: "OK" } },
+        },
+      },
+      [`${base}/licenses/{id}/renewals`]: {
+        post: {
+          tags: ["Licenses", "Renewals"],
+          summary: "Request license renewal",
+          parameters: [{ in: "path", name: "id", required: true }],
+          requestBody: {
+            required: false,
+            content: { "application/json": { schema: { type: "object", properties: { notes: { type: "string" } } } } },
+          },
+          responses: { "201": { description: "Created" } },
+        },
+      },
+
+      // Support
+      [`${base}/support/contact`]: {
+        post: {
+          tags: ["Support"],
+          summary: "Send a support message",
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: { $ref: "#/components/schemas/SupportContactRequest" } } },
+          },
           responses: { "200": { description: "OK" } },
         },
       },

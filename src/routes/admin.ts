@@ -107,6 +107,40 @@ router.get(
   asyncHandler((req, res) => AdminController.exportApplicantsCsv(req, res))
 );
 
+// Licenses
+router.get(
+  "/licenses",
+  isAdmin,
+  asyncHandler((req, res) => AdminController.listLicenses(req, res))
+);
+router.patch(
+  "/licenses/:id/status",
+  isAdmin,
+  asyncHandler((req, res) => AdminController.updateLicenseStatus(req as any, res))
+);
+router.post(
+  "/licenses/expire-due",
+  isAdmin,
+  asyncHandler((req, res) => AdminController.expireDueLicenses(req, res))
+);
+
+// Renewals
+router.get(
+  "/renewals",
+  isAdmin,
+  asyncHandler((req, res) => AdminController.listRenewals(req, res))
+);
+router.post(
+  "/renewals/:id/approve",
+  isAdmin,
+  asyncHandler((req, res) => AdminController.approveRenewal(req as any, res))
+);
+router.post(
+  "/renewals/:id/reject",
+  isAdmin,
+  asyncHandler((req, res) => AdminController.rejectRenewal(req as any, res))
+);
+
 // Dropdowns CRUD (admin)
 router.post(
   "/dropdowns",

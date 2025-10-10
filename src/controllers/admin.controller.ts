@@ -6,6 +6,7 @@ import * as AdminService from "../services/admin.service";
 import * as AppService from "../services/application.service";
 import * as AuthService from "../services/auth.service";
 import { UserStatus, UserRole as UserRoleT } from "../types/types";
+import * as LicenseService from "../services/license.service";
 
 console.log("all bugs fixed");
 
@@ -230,4 +231,63 @@ export async function createStaff(
   });
 
   return res.status(201).json({ success: true, data: result });
+}
+
+// Licenses (Admin)
+export async function listLicenses(req: Request, res: Response) {
+  const { status, type, q, expiresBefore, expiresAfter, page, limit } =
+    req.query as any;
+  const result = await LicenseService.listLicenses(
+    { status, type, q, expiresBefore, expiresAfter },
+    { page: Number(page) || 1, limit: Number(limit) || 20 }
+  );
+  res.json({ success: true, data: result.data, pagination: result.pagination });
+}
+
+export async function updateLicenseStatus(req: ReqWithUser, res: Response) {
+  const { status, notes } = req.body as any;
+  const lic = await LicenseService.updateLicenseStatus(
+    req.params.id,
+    status,
+    String(req.user!._id),
+    notes
+  );
+  res.json({ success: true, data: lic });
+}
+
+// Renewals (Admin)
+export async function listRenewals(req: Request, res: Response) {
+  const { status, licenseId, userId, page, limit } = req.query as any;
+  const result = await LicenseService.listRenewalRequests(
+    { status, licenseId, userId },
+    { page: Number(page) || 1, limit: Number(limit) || 20 }
+  );
+  res.json({ success: true, data: result.data, pagination: result.pagination });
+}
+
+export async function approveRenewal(req: ReqWithUser, res: Response) {
+  const { newExpiry, notes } = req.body as any;
+  const data = await LicenseService.decideRenewal(
+    req.params.id,
+    "APPROVE",
+    String(req.user!._id),
+    { newExpiry: newExpiry ? new Date(newExpiry) : undefined, notes }
+  );
+  res.json({ success: true, data });
+}
+
+export async function rejectRenewal(req: ReqWithUser, res: Response) {
+  const { notes } = req.body as any;
+  const data = await LicenseService.decideRenewal(
+    req.params.id,
+    "REJECT",
+    String(req.user!._id),
+    { notes }
+  );
+  res.json({ success: true, data });
+}
+
+export async function expireDueLicenses(_req: Request, res: Response) {
+  const result = await LicenseService.expireDueLicenses();
+  res.json({ success: true, data: result });
 }

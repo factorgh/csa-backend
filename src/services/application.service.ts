@@ -9,6 +9,7 @@ import {
 } from "../utils/license.util";
 import { logAudit } from "./audit.service";
 import { AuditAction, UserStatus } from "../types/types";
+import { sendEmail } from "./notification.service";
 
 export async function createDraft(params: {
   applicantUserId: string;
@@ -94,6 +95,17 @@ export async function submit(
     entityId: String(app._id),
     after: app,
   });
+  // Notify applicant: application submitted
+  try {
+    const user = await User.findById(userId).lean();
+    if (user?.email) {
+      await sendEmail(
+        user.email,
+        "Application Submitted",
+        `<p>Your application (${app._id}) has been submitted and is pending review.</p>`
+      );
+    }
+  } catch {}
   return app;
 }
 
@@ -265,6 +277,36 @@ export async function approve(
     console.error("Failed to activate user on approval", e);
   }
 
+  // Send email notification to holder on license issuance
+  try {
+    const lic = license!;
+    await sendEmail(
+      lic.holderEmail,
+      "License Issued",
+      `
+        <p>Dear ${lic.holderName},</p>
+        <p>Your license has been issued.</p>
+        <p>License Number: ${lic.licenseNumber}</p>
+        <p>Type: ${lic.type}</p>
+        <p>Expires At: ${lic.expiresAt?.toLocaleString?.() || "N/A"}</p>
+      `
+    );
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to send email notification to holder", e);
+  }
+
+  // Notify applicant: application approved
+  try {
+    if (applicant?.email) {
+      await sendEmail(
+        applicant.email,
+        "Application Approved",
+        `<p>Your application (${app._id}) has been approved. Your license number is <strong>${license?.licenseNumber}</strong>.</p>`
+      );
+    }
+  } catch {}
+
   return { app, license };
 }
 
@@ -287,6 +329,17 @@ export async function setUnderReview(
     entityId: String(app._id),
     after: app,
   });
+  // Notify applicant: application under review
+  try {
+    const user = await User.findById(app.applicantUserId).lean();
+    if (user?.email) {
+      await sendEmail(
+        user.email,
+        "Application Under Review",
+        `<p>Your application (${app._id}) is now under review.</p>`
+      );
+    }
+  } catch {}
   return app;
 }
 
@@ -310,6 +363,17 @@ export async function reject(appId: string, reviewerId: string) {
     entityId: String(app._id),
     after: app,
   });
+  // Notify applicant: application rejected
+  try {
+    const user = await User.findById(app.applicantUserId).lean();
+    if (user?.email) {
+      await sendEmail(
+        user.email,
+        "Application Rejected",
+        `<p>Your application (${app._id}) has been rejected.</p>`
+      );
+    }
+  } catch {}
   return app;
 }
 
@@ -331,5 +395,17 @@ export async function requestDocuments(
     entityId: String(app._id),
     after: app,
   });
+  // Notify applicant: documents requested
+  try {
+    const user = await User.findById(app.applicantUserId).lean();
+    if (user?.email) {
+      const list = (docs || []).map((d) => `<li>${d}</li>`).join("");
+      await sendEmail(
+        user.email,
+        "Documents Requested",
+        `<p>Additional documents have been requested for your application (${app._id}).</p><ul>${list}</ul>`
+      );
+    }
+  } catch {}
   return app;
 }

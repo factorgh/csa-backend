@@ -12,6 +12,7 @@ import type {
 } from "../types/types";
 import { UserRole, UserStatus, AuditAction } from "../types/runtime";
 import { logAudit } from "./audit.service";
+import { sendEmail } from "./notification.service";
 
 /**
  * Helper: Sign a JWT
@@ -71,11 +72,29 @@ export async function register(
     entityId: String(user._id),
   });
 
+  // Notify user of registration
+  try {
+    await sendEmail(
+      user.email,
+      "Welcome to CSA Portal",
+      `<p>Hello ${user.firstName || ""}, your account has been created.</p>`
+    );
+  } catch {}
+
   const token = signToken({
     userId: String(user._id),
     email: user.email,
     role: user.role,
   });
+
+  // Optional login notification (silent if email disabled)
+  try {
+    await sendEmail(
+      user.email,
+      "Login Notification",
+      `<p>Your account logged in at ${new Date().toLocaleString()}.</p>`
+    );
+  } catch {}
 
   return { user, token };
 }
@@ -169,6 +188,15 @@ export async function forgotPassword(email: string) {
   (user as any).passwordResetExpires = expires;
   await user.save();
 
+  // Send reset link (token to be used by frontend)
+  try {
+    await sendEmail(
+      user.email,
+      "Password Reset",
+      `<p>Use this token to reset your password: <strong>${token}</strong></p>`
+    );
+  } catch {}
+
   return { token, user };
 }
 
@@ -201,6 +229,14 @@ export async function resetPassword(token: string, password: string) {
     email: user.email,
     role: user.role,
   });
+
+  try {
+    await sendEmail(
+      user.email,
+      "Password Reset Successful",
+      `<p>Your password has been reset successfully.</p>`
+    );
+  } catch {}
 
   return { user, token: jwtToken };
 }
