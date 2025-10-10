@@ -1,6 +1,7 @@
 import http from "http";
 import mongoose from "mongoose";
 import app from "./app";
+import { scheduleMonthlyExpiry } from "./jobs/expiry.job";
 import config from "./config";
 
 const server = http.createServer(app);
@@ -26,6 +27,8 @@ async function start() {
     server.listen(config.port, () => {
       // eslint-disable-next-line no-console
       console.log(`Server running on http://localhost:${config.port}`);
+      // Schedule monthly license expiry check at end of each month
+      scheduleMonthlyExpiry();
     });
   } catch (err) {
     // eslint-disable-next-line no-console
