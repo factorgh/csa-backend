@@ -116,7 +116,9 @@ router.get(
 router.patch(
   "/licenses/:id/status",
   isAdmin,
-  asyncHandler((req, res) => AdminController.updateLicenseStatus(req as any, res))
+  asyncHandler((req, res) =>
+    AdminController.updateLicenseStatus(req as any, res)
+  )
 );
 router.post(
   "/licenses/expire-due",

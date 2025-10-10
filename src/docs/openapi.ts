@@ -1243,6 +1243,9 @@ export const swaggerSpec = swaggerJSDoc({
           tags: ["Licenses"],
           summary: "List current user's licenses",
           parameters: [
+            { in: "query", name: "status", schema: { type: "string" } },
+            { in: "query", name: "expiresBefore", schema: { type: "string", format: "date-time" } },
+            { in: "query", name: "expiresAfter", schema: { type: "string", format: "date-time" } },
             { in: "query", name: "page", schema: { type: "integer" } },
             { in: "query", name: "limit", schema: { type: "integer" } },
           ],

@@ -207,13 +207,22 @@ export async function approve(
   let license = await License.findOne({ applicationId: app._id });
   let createdNew = false;
   if (!license) {
+    // Compute issuedAt and default expiresAt (12 months) if not provided
+    const issuedAt = new Date();
+    const computeExpiry = (start: Date, months: number) => {
+      const d = new Date(start.getTime());
+      d.setMonth(d.getMonth() + months);
+      return d;
+    };
+    const defaultExpiry = computeExpiry(issuedAt, 12);
+    const resolvedExpiry = options?.expiresAt ?? defaultExpiry;
     try {
       license = await License.create({
         applicationId: app._id,
         licenseNumber,
         type: app.type,
-        issuedAt: new Date(),
-        expiresAt: options?.expiresAt,
+        issuedAt,
+        expiresAt: resolvedExpiry,
         status: "ACTIVE",
         verificationHash,
         holderName,

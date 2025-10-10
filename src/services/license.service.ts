@@ -5,6 +5,7 @@ import { paginate } from "../utils/paginate.util";
 import { AuditAction, LicenseStatus } from "../types/types";
 import { logAudit } from "./audit.service";
 import { sendEmail } from "./notification.service";
+import { generateLicenseNumber, generateVerificationHash } from "../utils/license.util";
 
 export async function listLicenses(filter: any, pagination: any) {
   const q: any = {};
@@ -34,8 +35,15 @@ export async function listUserLicenses(userId: string, pagination: any) {
   return paginate(License as any, filter, { ...pagination, sort: { createdAt: -1 } });
 }
 
-export async function listUserLicensesByEmail(email: string, pagination: any) {
+export async function listUserLicensesByEmail(
+  email: string,
+  filter: { status?: string; expiresBefore?: string | Date; expiresAfter?: string | Date },
+  pagination: any
+) {
   const q: any = { holderEmail: email };
+  if (filter?.status) q.status = filter.status;
+  if (filter?.expiresBefore) q.expiresAt = { $lte: new Date(filter.expiresBefore) };
+  if (filter?.expiresAfter) q.expiresAt = { ...(q.expiresAt || {}), $gte: new Date(filter.expiresAfter) };
   return paginate(License as any, q, { ...pagination, sort: { createdAt: -1 } });
 }
 
@@ -108,46 +116,99 @@ export async function decideRenewal(
   if (!lic) throw Object.assign(new Error("License not found"), { status: 404 });
 
   if (decision === "APPROVE") {
-    const before = lic.toObject();
-    if (!options?.newExpiry)
-      throw Object.assign(new Error("newExpiry is required"), { status: 400 });
-    lic.expiresAt = options.newExpiry;
-    lic.status = LicenseStatus.ACTIVE as any;
-    await lic.save();
+    const oldLic = lic;
+    const oldBefore = oldLic.toObject();
+    // Compute base date and new expiry (12 months after base)
+    const baseDate = options?.newExpiry ?? new Date();
+    const addMonths = (d: Date, months: number) => {
+      const nd = new Date(d.getTime());
+      nd.setMonth(nd.getMonth() + months);
+      return nd;
+    };
+    const newExpires = addMonths(baseDate, 12);
 
+    // Create a new license (superseding the old one)
+    const newLicenseNumber = generateLicenseNumber(oldLic.type as any);
+    const verificationHash = generateVerificationHash(newLicenseNumber);
+    const newLic = await License.create({
+      applicationId: oldLic.applicationId,
+      licenseNumber: newLicenseNumber,
+      type: oldLic.type,
+      issuedAt: baseDate,
+      expiresAt: newExpires,
+      status: LicenseStatus.ACTIVE as any,
+      verificationHash,
+      holderName: (oldLic as any).holderName,
+      holderEmail: (oldLic as any).holderEmail,
+      organizationName: (oldLic as any).organizationName,
+    } as any);
+
+    // Mark old license as expired immediately to avoid overlap
+    (oldLic as any).status = LicenseStatus.EXPIRED as any;
+    await oldLic.save();
+
+    // Update application to point to the new current license
+    await Application.updateOne(
+      { _id: oldLic.applicationId },
+      { $set: { licenseId: (newLic as any)._id } }
+    );
+
+    // Update renewal request status
     req.status = RenewalStatus.APPROVED;
     req.decidedAt = new Date();
     await req.save();
 
+    // Audits
     await logAudit({
       action: AuditAction.LICENSE_RENEWAL_APPROVED,
       actorUserId,
       entityType: "License",
-      entityId: String(lic._id),
-      before,
-      after: lic,
+      entityId: String(newLic._id),
+      before: oldBefore,
+      after: newLic,
+      meta: { supersedes: String(oldLic._id) },
+    } as any);
+    await logAudit({
+      action: AuditAction.LICENSE_GENERATED,
+      actorUserId,
+      entityType: "License",
+      entityId: String(newLic._id),
+      after: newLic,
+    } as any);
+    await logAudit({
+      action: AuditAction.LICENSE_EXPIRED,
+      actorUserId,
+      entityType: "License",
+      entityId: String(oldLic._id),
+      before: oldBefore,
+      after: oldLic,
+      meta: { supersededBy: String(newLic._id) },
     } as any);
     await logAudit({
       action: AuditAction.LICENSE_RENEWED,
       actorUserId,
       entityType: "License",
-      entityId: String(lic._id),
-      after: { expiresAt: lic.expiresAt },
+      entityId: String(newLic._id),
+      after: { expiresAt: newLic.expiresAt },
+      meta: { supersedes: String(oldLic._id) },
     } as any);
-    // Notify holder
+
+    // Notify holder about the new license
     try {
       await sendEmail(
-        lic.holderEmail,
+        (newLic as any).holderEmail,
         "License Renewal Approved",
         `
-        <p>Dear ${lic.holderName},</p>
-        <p>Your license renewal has been approved.</p>
-        <p>License Number: ${lic.licenseNumber}</p>
-        <p>New Expiry: ${lic.expiresAt?.toLocaleString?.() || "N/A"}</p>
+        <p>Dear ${(newLic as any).holderName},</p>
+        <p>Your license renewal has been approved and a new license has been issued.</p>
+        <p>New License Number: ${(newLic as any).licenseNumber}</p>
+        <p>Valid Until: ${(newLic as any).expiresAt?.toLocaleString?.() || "N/A"}</p>
+        <p>The previous license (${(oldLic as any).licenseNumber}) is now expired.</p>
         `
       );
     } catch {}
-    return { lic, req };
+
+    return { lic: newLic, req };
   } else {
     req.status = RenewalStatus.REJECTED;
     req.decidedAt = new Date();

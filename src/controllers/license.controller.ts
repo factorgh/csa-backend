@@ -8,10 +8,14 @@ export async function listMyLicenses(req: ReqWithUser, res: Response) {
   const email = req.user?.email as string;
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
-  const result = await LicenseService.listUserLicensesByEmail(email, {
-    page,
-    limit,
-  });
+  const status = (req.query.status as string) || undefined;
+  const expiresBefore = (req.query.expiresBefore as string) || undefined;
+  const expiresAfter = (req.query.expiresAfter as string) || undefined;
+  const result = await LicenseService.listUserLicensesByEmail(
+    email,
+    { status, expiresBefore, expiresAfter },
+    { page, limit }
+  );
   res.json({ success: true, data: result.data, pagination: result.pagination });
 }
 
