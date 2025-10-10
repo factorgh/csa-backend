@@ -46,7 +46,6 @@ export const swaggerSpec = swaggerJSDoc({
                 "PROFESSIONAL_TYPE",
                 "DESIGNATION",
                 "ID_TYPE",
-                "SERVICE_TYPE",
               ],
             },
             label: { type: "string" },
@@ -55,16 +54,9 @@ export const swaggerSpec = swaggerJSDoc({
             updatedAt: { type: "string", format: "date-time" },
           },
         },
-        DropdownUpsertRequest: {
-          type: "object",
-          required: ["category", "label", "value"],
-          properties: {
-            category: {
-              $ref: "#/components/schemas/Dropdown/properties/category",
-            },
-            label: { type: "string" },
-            value: { type: "string" },
-          },
+        ApplicationType: {
+          type: "string",
+          enum: ["PROVIDER", "PROFESSIONAL", "ESTABLISHMENT"],
         },
         User: {
           type: "object",
