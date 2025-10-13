@@ -7,6 +7,12 @@ import { logAudit } from "./audit.service";
 import { sendEmail } from "./notification.service";
 import { generateLicenseNumber, generateVerificationHash } from "../utils/license.util";
 
+export async function getLicenseById(id: string) {
+  const lic = await License.findById(id);
+  if (!lic) throw Object.assign(new Error("License not found"), { status: 404 });
+  return lic;
+}
+
 export async function listLicenses(filter: any, pagination: any) {
   const q: any = {};
   if (filter.status) q.status = filter.status;

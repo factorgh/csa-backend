@@ -113,6 +113,11 @@ router.get(
   isAdmin,
   asyncHandler((req, res) => AdminController.listLicenses(req, res))
 );
+router.get(
+  "/licenses/:id",
+  isAdmin,
+  asyncHandler((req, res) => AdminController.getLicense(req, res))
+);
 router.patch(
   "/licenses/:id/status",
   isAdmin,

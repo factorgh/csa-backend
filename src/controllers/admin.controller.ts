@@ -249,6 +249,11 @@ export async function listLicenses(req: Request, res: Response) {
   res.json({ success: true, data: result.data, pagination: result.pagination });
 }
 
+export async function getLicense(req: Request, res: Response) {
+  const lic = await LicenseService.getLicenseById(req.params.id);
+  res.json({ success: true, data: lic });
+}
+
 export async function updateLicenseStatus(req: ReqWithUser, res: Response) {
   const { status, notes } = req.body as any;
   const lic = await LicenseService.updateLicenseStatus(

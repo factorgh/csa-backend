@@ -1169,6 +1169,30 @@ export const swaggerSpec = swaggerJSDoc({
           },
         },
       },
+      [`${base}/admin/licenses/{id}`]: {
+        get: {
+          tags: ["Admin", "Licenses"],
+          summary: "Get license by id",
+          parameters: [{ in: "path", name: "id", required: true }],
+          responses: {
+            "200": {
+              description: "OK",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean" },
+                      data: { $ref: "#/components/schemas/License" },
+                    },
+                  },
+                },
+              },
+            },
+            "404": { description: "Not found" },
+          },
+        },
+      },
       [`${base}/admin/licenses/{id}/status`]: {
         patch: {
           tags: ["Admin", "Licenses"],
