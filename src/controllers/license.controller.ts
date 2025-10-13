@@ -19,6 +19,16 @@ export async function listMyLicenses(req: ReqWithUser, res: Response) {
   res.json({ success: true, data: result.data, pagination: result.pagination });
 }
 
+export async function getMyLicenseById(req: ReqWithUser, res: Response) {
+  const lic = await LicenseService.getLicenseById(req.params.id);
+  const email = req.user?.email as string;
+  if ((lic as any).holderEmail !== email) {
+    res.status(403).json({ success: false, message: "Forbidden" });
+    return;
+  }
+  res.json({ success: true, data: lic });
+}
+
 export async function requestRenewal(req: ReqWithUser, res: Response) {
   const { notes } = req.body as any;
   const request = await LicenseService.requestRenewal(

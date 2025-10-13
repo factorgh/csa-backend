@@ -1268,6 +1268,31 @@ export const swaggerSpec = swaggerJSDoc({
           responses: { "200": { description: "OK" } },
         },
       },
+      [`${base}/licenses/{id}`]: {
+        get: {
+          tags: ["Licenses"],
+          summary: "Get my license by id",
+          parameters: [{ in: "path", name: "id", required: true }],
+          responses: {
+            "200": {
+              description: "OK",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean" },
+                      data: { $ref: "#/components/schemas/License" },
+                    },
+                  },
+                },
+              },
+            },
+            "403": { description: "Forbidden" },
+            "404": { description: "Not found" },
+          },
+        },
+      },
       [`${base}/licenses/{id}/renewals`]: {
         post: {
           tags: ["Licenses", "Renewals"],

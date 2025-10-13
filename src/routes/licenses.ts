@@ -12,6 +12,11 @@ router.get(
   asyncHandler((req, res) => LicenseController.listMyLicenses(req as any, res))
 );
 
+router.get(
+  "/:id",
+  asyncHandler((req, res) => LicenseController.getMyLicenseById(req as any, res))
+);
+
 router.post(
   "/:id/renewals",
   asyncHandler((req, res) => LicenseController.requestRenewal(req as any, res))
