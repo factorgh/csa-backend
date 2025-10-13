@@ -7,6 +7,7 @@ import {
 
 // --- Shared Field Rules ---
 const nameRule = Joi.string().trim().min(2).max(100);
+const middleNameRule = Joi.string().trim().min(1).max(100);
 const phoneRule = Joi.string()
   .pattern(/^[0-9+\-()\s]*$/)
   .trim()
@@ -40,7 +41,7 @@ export const registerSchema = Joi.object({
     "any.required": "Last name is required",
   }),
 
-  middleName: nameRule.allow("", null),
+  middleName: middleNameRule.allow("", null),
 
   phoneNumber: phoneRule.allow("", null),
 
@@ -110,7 +111,7 @@ export const registerWithApplicationSchema = Joi.object({
     lastName: nameRule.required().messages({
       "any.required": "Last name is required",
     }),
-    middleName: nameRule.allow("", null),
+    middleName: middleNameRule.allow("", null),
     phoneNumber: phoneRule.allow("", null),
     telephoneNumber: phoneRule.allow("", null),
     designation: Joi.string().trim().allow("", null),
